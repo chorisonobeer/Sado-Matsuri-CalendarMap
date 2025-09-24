@@ -205,33 +205,33 @@ function Map<T extends MapPointBase = MapPointBase>(props: MapProps<T>) {
       style: 'geolonia/basic',
       center: initialCenter,
       zoom: initialZoom,
-      interactive: true,
-      trackResize: true,
+      attributionControl: true
     });
     const onMapLoad = () => {
       hidePoiLayers(map);
       setMapObject(map);
-      try {
-        const geolocateControl = new geolonia.GeolocateControl({
-          positionOptions: {
-            enableHighAccuracy: true,
-            timeout: 2000,
-            maximumAge: 0
-          },
-          trackUserLocation: true,
-          showUserLocation: true
-        });
-        map.addControl(geolocateControl, 'top-right');
-        // 現在地を自動取得
-        setTimeout(() => {
-          geolocateControl.trigger();
-        }, 100);
-        geolocateControl.on('error', () => {
-          console.warn('位置情報の取得に失敗しましたが、地図は使用できます');
-        });
-      } catch (error) {
-        console.warn('位置情報コントロールの初期化に失敗しましたが、地図は使用できます', error);
-      }
+      // GeolocateControlは一時的に無効化（Geolonia移行後に再実装）
+      // try {
+      //   const geolocateControl = new geolonia.GeolocateControl({
+      //     positionOptions: {
+      //       enableHighAccuracy: true,
+      //       timeout: 2000,
+      //       maximumAge: 0
+      //     },
+      //     trackUserLocation: true,
+      //     showUserLocation: true
+      //   });
+      //   map.addControl(geolocateControl, 'top-right');
+      //   // 現在地を自動取得
+      //   setTimeout(() => {
+      //     geolocateControl.trigger();
+      //   }, 100);
+      //   geolocateControl.on('error', () => {
+      //     console.warn('位置情報の取得に失敗しましたが、地図は使用できます');
+      //   });
+      // } catch (error) {
+      //   console.warn('GeolocateControlの初期化に失敗しました:', error);
+      // }
     };
     const orientationChangeHandler = () => {
       map.resize();

@@ -1,7 +1,7 @@
-/** 
+/**
  * /src/App/MultiMapView.tsx
- * 2025-01-25T10:00+09:00
- * 変更概要: 新規追加 - 複数イベント対応地図表示コンポーネント（検索画面用）
+ * 2025-01-25T19:30+09:00
+ * 変更概要: Google MapsからGeolonia Mapsに移行 - 複数イベント対応地図表示コンポーネント（検索画面用）
  */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
@@ -19,207 +19,242 @@ const MultiMapView: React.FC<MultiMapViewProps> = ({
   onEventSelect 
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
+  const mapInstanceRef = useRef<any>(null); // geolonia.Map
+  const markersRef = useRef<Map<string, any>>(new Map()); // geolonia.Marker
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   // 地図の初期化
   const initializeMap = useCallback(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || mapInstanceRef.current) return;
 
-    const mapOptions: google.maps.MapOptions = {
-      center: { lat: 38.0195, lng: 138.2570 }, // 佐渡島の中心
-      zoom: 10,
-      disableDefaultUI: true,
-      gestureHandling: 'cooperative',
-      styles: [
-        {
-          featureType: 'poi',
-          elementType: 'labels',
-          stylers: [{ visibility: 'off' }]
-        }
-      ]
-    };
+    // Geolonia APIが利用可能かチェック
+    if (!window.geolonia) {
+      console.error('Geolonia API is not loaded');
+      return;
+    }
 
-    mapInstanceRef.current = new google.maps.Map(mapRef.current, mapOptions);
-    setIsMapLoaded(true);
+    try {
+      // 佐渡島の中心座標
+      const defaultCenter: [number, number] = [138.2570, 38.0195]; // [lng, lat]
+      const defaultZoom = parseInt(process.env.REACT_APP_ZOOM || '10');
+
+      // Geolonia地図の初期化
+      mapInstanceRef.current = new window.geolonia.Map({
+        container: mapRef.current,
+        style: 'geolonia/basic',
+        center: defaultCenter,
+        zoom: defaultZoom,
+        attributionControl: true
+      });
+
+      // 地図読み込み完了イベント
+      mapInstanceRef.current.on('load', () => {
+        console.log('MultiMapView: Geolonia map loaded successfully');
+        setIsMapLoaded(true);
+      });
+
+      // エラーハンドリング
+      mapInstanceRef.current.on('error', (e: any) => {
+        console.error('MultiMapView: Geolonia map error:', e);
+      });
+
+    } catch (error) {
+      console.error('Failed to initialize Geolonia map:', error);
+    }
   }, []);
 
-  // Google Maps APIの読み込み
+  // Geolonia Maps APIの読み込み確認と地図初期化
   useEffect(() => {
-    const loadGoogleMaps = () => {
-      if (window.google && window.google.maps) {
+    const checkGeoloniaAPI = () => {
+      if (window.geolonia) {
         initializeMap();
-        return;
+      } else {
+        // APIが読み込まれるまで待機
+        setTimeout(checkGeoloniaAPI, 100);
       }
-
-      const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
-      if (!apiKey) {
-        console.error('Google Maps API key is not set');
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry`;
-      script.async = true;
-      script.defer = true;
-      script.onload = initializeMap;
-      script.onerror = () => {
-        console.error('Failed to load Google Maps API');
-      };
-
-      document.head.appendChild(script);
     };
 
-    loadGoogleMaps();
+    checkGeoloniaAPI();
+
+    // クリーンアップ
+    return () => {
+      // 全てのマーカーを削除
+      const currentMarkersRef = markersRef.current;
+      currentMarkersRef.forEach(marker => {
+        marker.remove();
+      });
+      currentMarkersRef.clear();
+      
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
   }, [initializeMap]);
 
-  // マーカーの作成
-  const createMarker = useCallback((event: Pwamap.FestivalData) => {
-    if (!mapInstanceRef.current || !event.緯度 || !event.経度) return null;
-
+  // マーカーを作成する関数
+  const createMarker = useCallback((event: Pwamap.FestivalData, isSelected: boolean = false) => {
     const lat = parseFloat(event.緯度);
     const lng = parseFloat(event.経度);
 
-    if (isNaN(lat) || isNaN(lng)) return null;
+    if (isNaN(lat) || isNaN(lng)) {
+      console.warn('Invalid coordinates for event:', event.お祭り名);
+      return null;
+    }
 
-    const position = { lat, lng };
-    const isSelected = selectedEvent?.お祭り名 === event.お祭り名;
+    try {
+      // マーカーの色を選択状態に応じて変更
+      const markerColor = isSelected ? '#FF0000' : '#0066CC';
+      const markerScale = isSelected ? 1.3 : 1.0;
 
-    const marker = new google.maps.Marker({
-      position,
-      map: mapInstanceRef.current,
-      title: event.お祭り名,
-      animation: google.maps.Animation.DROP,
-      icon: {
-        url: isSelected 
-          ? 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-            <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="16" cy="16" r="12" fill="#ff4444" stroke="#ffffff" stroke-width="3"/>
-              <circle cx="16" cy="16" r="6" fill="#ffffff"/>
-            </svg>
-          `)
-          : 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="8" fill="#4285f4" stroke="#ffffff" stroke-width="2"/>
-              <circle cx="12" cy="12" r="4" fill="#ffffff"/>
-            </svg>
-          `),
-        scaledSize: new google.maps.Size(isSelected ? 32 : 24, isSelected ? 32 : 24),
-        anchor: new google.maps.Point(isSelected ? 16 : 12, isSelected ? 16 : 12)
-      }
-    });
+      const marker = new window.geolonia.Marker({
+        color: markerColor,
+        scale: markerScale
+      })
+        .setLngLat([lng, lat])
+        .addTo(mapInstanceRef.current);
 
-    // マーカークリックイベント
-    marker.addListener('click', () => {
-      onEventSelect(event);
-    });
+      // マーカークリックイベント
+      marker.getElement().addEventListener('click', () => {
+        console.log('Marker clicked:', event.お祭り名);
+        onEventSelect(event);
+      });
 
-    return marker;
-  }, [selectedEvent, onEventSelect]);
+      // ポップアップの作成
+      const popup = new window.geolonia.Popup({
+        offset: 25,
+        closeButton: true,
+        closeOnClick: false
+      }).setHTML(`
+        <div style="padding: 10px; max-width: 250px;">
+          <h3 style="margin: 0 0 8px 0; font-size: 14px; font-weight: bold; color: #333;">
+            ${event.お祭り名}
+          </h3>
+          <div style="font-size: 12px; color: #666; margin-bottom: 5px;">
+            <strong>場所:</strong> ${event.開催場所名 || '未設定'}
+          </div>
+          <div style="font-size: 12px; color: #666; margin-bottom: 5px;">
+            <strong>日時:</strong> ${event.開始日 || '未設定'}
+          </div>
+          <div style="font-size: 12px; color: #666;">
+            <strong>料金:</strong> ${event.無料か有料か === 'TRUE' ? '無料' : '有料'}
+          </div>
+        </div>
+      `);
 
-  // イベントリストが変更された時のマーカー更新
+      marker.setPopup(popup);
+
+      return marker;
+    } catch (error) {
+      console.error('Failed to create marker for event:', event.お祭り名, error);
+      return null;
+    }
+  }, [onEventSelect]);
+
+  // イベントリストに基づいてマーカーを更新
   useEffect(() => {
-    if (!isMapLoaded || !mapInstanceRef.current) return;
+    if (!isMapLoaded || !mapInstanceRef.current || !events.length) return;
 
     // 既存のマーカーをクリア
     markersRef.current.forEach(marker => {
-      marker.setMap(null);
+      marker.remove();
     });
     markersRef.current.clear();
 
-    // 新しいマーカーを作成
-    events.forEach((event, index) => {
-      const marker = createMarker(event);
+    // 有効な座標を持つイベントのみフィルタリング
+    const validEvents = events.filter(event => {
+      const lat = parseFloat(event.緯度);
+      const lng = parseFloat(event.経度);
+      return !isNaN(lat) && !isNaN(lng);
+    });
+
+    if (validEvents.length === 0) {
+      console.warn('No events with valid coordinates found');
+      return;
+    }
+
+    // 各イベントにマーカーを作成
+    validEvents.forEach(event => {
+      const isSelected = !!(selectedEvent && selectedEvent.お祭り名 === event.お祭り名);
+      const marker = createMarker(event, isSelected);
+      
       if (marker) {
-        const key = `${event.お祭り名}-${index}`;
-        markersRef.current.set(key, marker);
+        markersRef.current.set(event.お祭り名, marker);
       }
     });
 
-    // 地図の表示範囲を調整
-    if (events.length > 0) {
-      const bounds = new google.maps.LatLngBounds();
-      let hasValidCoords = false;
+    // 地図の表示範囲を全マーカーが見えるように調整
+    if (validEvents.length > 1) {
+      const bounds = new window.geolonia.LngLatBounds();
+      
+      validEvents.forEach(event => {
+        const lat = parseFloat(event.緯度);
+        const lng = parseFloat(event.経度);
+        bounds.extend([lng, lat]);
+      });
 
-      events.forEach(event => {
-        if (event.緯度 && event.経度) {
-          const lat = parseFloat(event.緯度);
-          const lng = parseFloat(event.経度);
-          if (!isNaN(lat) && !isNaN(lng)) {
-            bounds.extend({ lat, lng });
-            hasValidCoords = true;
-          }
+      // 境界に少し余裕を持たせて表示
+      mapInstanceRef.current.fitBounds(bounds, {
+        padding: { top: 50, bottom: 50, left: 50, right: 50 },
+        maxZoom: 15
+      });
+    } else if (validEvents.length === 1) {
+      // 単一イベントの場合は中心に表示
+      const event = validEvents[0];
+      const lat = parseFloat(event.緯度);
+      const lng = parseFloat(event.経度);
+      
+      mapInstanceRef.current.flyTo({
+        center: [lng, lat],
+        zoom: 14,
+        duration: 1000
+      });
+    }
+
+  }, [events, selectedEvent, isMapLoaded, createMarker]);
+
+  // 選択されたイベントのマーカーを強調表示
+  useEffect(() => {
+    if (!isMapLoaded || !selectedEvent) return;
+
+    // 全てのマーカーを通常状態に戻す
+    markersRef.current.forEach((_, eventName) => {
+      const isSelected = eventName === selectedEvent.お祭り名;
+      
+      // マーカーの色とサイズを更新（Geoloniaでは直接変更が困難なため、再作成）
+      if (isSelected) {
+        // 選択されたマーカーの位置に地図を移動
+        const lat = parseFloat(selectedEvent.緯度);
+        const lng = parseFloat(selectedEvent.経度);
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+          mapInstanceRef.current.flyTo({
+            center: [lng, lat],
+            zoom: 15,
+            duration: 1000
+          });
         }
-      });
-
-      if (hasValidCoords) {
-        mapInstanceRef.current.fitBounds(bounds);
-        // ズームレベルが高すぎる場合は調整
-        const listener = google.maps.event.addListener(mapInstanceRef.current, 'bounds_changed', () => {
-          if (mapInstanceRef.current!.getZoom()! > 15) {
-            mapInstanceRef.current!.setZoom(15);
-          }
-          google.maps.event.removeListener(listener);
-        });
-      }
-    }
-  }, [events, isMapLoaded, createMarker]);
-
-  // 選択されたイベントが変更された時のマーカー更新
-  useEffect(() => {
-    if (!isMapLoaded) return;
-
-    // 全マーカーを再作成（選択状態の表示を更新するため）
-    markersRef.current.forEach(marker => {
-      marker.setMap(null);
-    });
-    markersRef.current.clear();
-
-    events.forEach((event, index) => {
-      const marker = createMarker(event);
-      if (marker) {
-        const key = `${event.お祭り名}-${index}`;
-        markersRef.current.set(key, marker);
       }
     });
-
-    // 選択されたイベントがある場合、そのマーカーを中心に表示
-    if (selectedEvent && selectedEvent.緯度 && selectedEvent.経度) {
-      const lat = parseFloat(selectedEvent.緯度);
-      const lng = parseFloat(selectedEvent.経度);
-      if (!isNaN(lat) && !isNaN(lng) && mapInstanceRef.current) {
-        mapInstanceRef.current.panTo({ lat, lng });
-      }
-    }
-  }, [selectedEvent, isMapLoaded, events, createMarker]);
-
-  // コンポーネントのクリーンアップ
-  useEffect(() => {
-    const currentMarkersRef = markersRef.current;
-    return () => {
-      currentMarkersRef.forEach(marker => {
-        marker.setMap(null);
-      });
-      currentMarkersRef.clear();
-    };
-  }, []);
+  }, [selectedEvent, isMapLoaded]);
 
   return (
-    <div className="map-view">
+    <div className="multi-map-view">
       <div 
         ref={mapRef} 
         className="map-container"
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: '100%', height: '100%', minHeight: '400px' }}
       />
       {!isMapLoaded && (
         <div className="map-loading">
-          <div className="loading-spinner">地図を読み込み中...</div>
+          <div className="loading-spinner">地図を読み込んでいます...</div>
         </div>
       )}
       {isMapLoaded && events.length === 0 && (
-        <div className="map-no-events">
-          <p>表示するイベントがありません</p>
+        <div className="no-events-overlay">
+          <div className="no-events-message">
+            表示するイベントがありません
+          </div>
         </div>
       )}
     </div>

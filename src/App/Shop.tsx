@@ -95,10 +95,19 @@ const Shop: React.FC<Props> = (props) => {
   const tel = props.shop["TEL"];
   const site = props.shop["公式サイト"];
 
-  // Google Mapsのルート検索URLを生成
-  const getGoogleMapsDirectionsUrl = () => {
-    const destination = encodeURIComponent(address);
-    return `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+  // 地図アプリでのルート検索URLを生成（汎用的な形式）
+  const getDirectionsUrl = () => {
+    const lat = parseFloat(props.shop["緯度"]);
+    const lng = parseFloat(props.shop["経度"]);
+    
+    if (!isNaN(lat) && !isNaN(lng)) {
+      // 座標を使用した汎用的なURL（多くの地図アプリで対応）
+      return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    } else {
+      // 座標が無効な場合は住所を使用
+      const destination = encodeURIComponent(address);
+      return `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+    }
   };
 
   // 画像データの処理
@@ -149,7 +158,7 @@ const Shop: React.FC<Props> = (props) => {
 
         <div className="shop-route">
           <a 
-            href={getGoogleMapsDirectionsUrl()} 
+            href={getDirectionsUrl()} 
             target="_blank" 
             rel="noopener noreferrer"
             className="route-link"

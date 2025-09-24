@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import './HybridView.scss'; // 新しいSCSSファイル
-import { MapPointBase } from './Map'; // Mapコンポーネントの型定義を再利用
-import SearchFeature from './SearchFeature'; // 既存のSearchFeatureを再利用
+/**
+ * /src/App/HybridView.tsx
+ * 2025-01-25T19:30+09:00
+ * 変更概要: Google MapsからGeolonia Mapsに移行 - ハイブリッド地図表示コンポーネント
+ */
 
-// Google Maps APIキーは環境変数から取得
-const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
+import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import './HybridView.scss';
+import { MapPointBase } from './Map';
+import SearchFeature from './SearchFeature';
 
 interface HybridViewProps {
   data: Pwamap.FestivalData[];
@@ -18,8 +21,8 @@ const HybridView: React.FC<HybridViewProps> = ({ data, onSelectShop, onSearchRes
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'map' | 'list'>(location.pathname === '/list' ? 'list' : 'map');
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  // const currentMarkerRef = useRef<google.maps.Marker | null>(null); // 未使用のためコメントアウト
+  const mapInstanceRef = useRef<any>(null); // geolonia.Map
+  const markersRef = useRef<any[]>([]); // geolonia.Marker[]
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [filteredEvents, setFilteredEvents] = useState<Pwamap.FestivalData[]>(data);
 
@@ -32,138 +35,319 @@ const HybridView: React.FC<HybridViewProps> = ({ data, onSelectShop, onSearchRes
     }
   }, [location.pathname]);
 
-  // Google Maps APIの読み込み
-  useEffect(() => {
-    const loadGoogleMaps = () => {
-      if (window.google && window.google.maps) {
-        initializeMap();
-        return;
-      }
-
-      if (!GOOGLE_MAPS_API_KEY) {
-        console.error('Google Maps API key is not set');
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=geometry`;
-      script.async = true;
-      script.defer = true;
-      script.onload = initializeMap;
-      script.onerror = () => {
-        console.error('Failed to load Google Maps API');
-      };
-
-      document.head.appendChild(script);
-    };
-
-    loadGoogleMaps();
-  }, []);
-
   // 地図の初期化
   const initializeMap = () => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || mapInstanceRef.current) return;
 
-    const mapOptions: google.maps.MapOptions = {
-      center: { lat: 38.0195, lng: 138.2570 }, // 佐渡島中心
-      zoom: 10,
-      disableDefaultUI: true,
-      gestureHandling: 'cooperative',
-      styles: [
-        {
-          featureType: 'poi',
-          elementType: 'labels',
-          stylers: [{ visibility: 'off' }]
-        }
-      ]
-    };
+    // Geolonia APIが利用可能かチェック
+    if (!window.geolonia) {
+      console.error('Geolonia API is not loaded');
+      return;
+    }
 
-    mapInstanceRef.current = new google.maps.Map(mapRef.current, mapOptions);
-    setIsMapLoaded(true);
+    try {
+      // 佐渡島の中心座標
+      const defaultCenter: [number, number] = [138.2570, 38.0195]; // [lng, lat]
+      const defaultZoom = parseInt(process.env.REACT_APP_ZOOM || '10');
+
+      // Geolonia地図の初期化
+      mapInstanceRef.current = new window.geolonia.Map({
+        container: mapRef.current,
+        style: 'geolonia/basic',
+        center: defaultCenter,
+        zoom: defaultZoom,
+        attributionControl: true
+      });
+
+      // 地図読み込み完了イベント
+      mapInstanceRef.current.on('load', () => {
+        console.log('HybridView: Geolonia map loaded successfully');
+        setIsMapLoaded(true);
+        updateMarkers(); // 地図読み込み後にマーカーを表示
+      });
+
+      // エラーハンドリング
+      mapInstanceRef.current.on('error', (e: any) => {
+        console.error('HybridView: Geolonia map error:', e);
+      });
+
+    } catch (error) {
+      console.error('Failed to initialize Geolonia map:', error);
+    }
   };
 
-  // マーカーの表示・更新
+  // Geolonia Maps APIの読み込み確認と地図初期化
   useEffect(() => {
-    if (!isMapLoaded || !mapInstanceRef.current) return;
+    const checkGeoloniaAPI = () => {
+      if (window.geolonia) {
+        initializeMap();
+      } else {
+        // APIが読み込まれるまで待機
+        setTimeout(checkGeoloniaAPI, 100);
+      }
+    };
 
-    // 既存のマーカーをすべて削除
-    const markers: google.maps.Marker[] = []; // ローカル変数として定義
-    markers.forEach(marker => marker.setMap(null));
-    markers.length = 0; // 配列をクリア
+    checkGeoloniaAPI();
 
-    filteredEvents.forEach(event => {
-      if (event.緯度 && event.経度) {
+    // クリーンアップ
+    return () => {
+      // 全てのマーカーを削除
+      markersRef.current.forEach(marker => {
+        if (marker && marker.remove) {
+          marker.remove();
+        }
+      });
+      markersRef.current = [];
+      
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  // マーカーを更新する関数
+  const updateMarkers = () => {
+    if (!mapInstanceRef.current || !isMapLoaded) return;
+
+    // 既存のマーカーを削除
+    markersRef.current.forEach(marker => {
+      if (marker && marker.remove) {
+        marker.remove();
+      }
+    });
+    markersRef.current = [];
+
+    // 有効な座標を持つイベントのみフィルタリング
+    const validEvents = filteredEvents.filter(event => {
+      const lat = parseFloat(event.緯度);
+      const lng = parseFloat(event.経度);
+      return !isNaN(lat) && !isNaN(lng);
+    });
+
+    if (validEvents.length === 0) {
+      console.warn('No events with valid coordinates found');
+      return;
+    }
+
+    // 各イベントにマーカーを作成
+    validEvents.forEach(event => {
+      const lat = parseFloat(event.緯度);
+      const lng = parseFloat(event.経度);
+
+      try {
+        const marker = new window.geolonia.Marker({
+          color: '#0066CC',
+          scale: 1.0
+        })
+          .setLngLat([lng, lat])
+          .addTo(mapInstanceRef.current);
+
+        // マーカークリックイベント
+        marker.getElement().addEventListener('click', () => {
+          console.log('Marker clicked:', event.お祭り名);
+          
+          // onSelectShopを呼び出し（MapPointBase形式に変換）
+          const mapPoint: MapPointBase = {
+            index: 0, // 仮のindex値
+            緯度: event.緯度,
+            経度: event.経度,
+            お祭り名: event.お祭り名,
+            住所: event.住所 || '',
+            簡単な説明: event.簡単な説明 || ''
+          };
+          onSelectShop(mapPoint);
+        });
+
+        // ポップアップの作成
+        const popup = new window.geolonia.Popup({
+          offset: 25,
+          closeButton: true,
+          closeOnClick: false
+        }).setHTML(`
+          <div style="padding: 12px; max-width: 280px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 15px; font-weight: bold; color: #333;">
+              ${event.お祭り名}
+            </h3>
+            <div style="font-size: 12px; color: #666; margin-bottom: 6px;">
+              <strong>場所:</strong> ${event.開催場所名 || '未設定'}
+            </div>
+            <div style="font-size: 12px; color: #666; margin-bottom: 6px;">
+              <strong>住所:</strong> ${event.住所 || '未設定'}
+            </div>
+            <div style="font-size: 12px; color: #666; margin-bottom: 6px;">
+              <strong>日時:</strong> ${event.開始日 || '未設定'}
+            </div>
+            <div style="font-size: 12px; color: #666; margin-bottom: 6px;">
+              <strong>料金:</strong> ${event.無料か有料か === 'TRUE' ? '無料' : '有料'}
+            </div>
+            ${event.簡単な説明 ? `
+              <div style="font-size: 11px; color: #888; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                ${event.簡単な説明}
+              </div>
+            ` : ''}
+          </div>
+        `);
+
+        marker.setPopup(popup);
+        markersRef.current.push(marker);
+
+      } catch (error) {
+        console.error('Failed to create marker for event:', event.お祭り名, error);
+      }
+    });
+
+    // 地図の表示範囲を全マーカーが見えるように調整
+    if (validEvents.length > 1) {
+      const bounds = new window.geolonia.LngLatBounds();
+      
+      validEvents.forEach(event => {
         const lat = parseFloat(event.緯度);
         const lng = parseFloat(event.経度);
+        bounds.extend([lng, lat]);
+      });
 
-        if (!isNaN(lat) && !isNaN(lng)) {
-          const marker = new google.maps.Marker({
-            position: { lat, lng },
-            map: mapInstanceRef.current,
-            animation: google.maps.Animation.DROP,
-            title: event.お祭り名
-          });
+      // 境界に余裕を持たせて表示
+      mapInstanceRef.current.fitBounds(bounds, {
+        padding: { top: 60, bottom: 60, left: 60, right: 60 },
+        maxZoom: 15
+      });
+    }
+  };
 
-          marker.addListener('click', () => {
-            onSelectShop(event); // イベント詳細表示
-          });
-          markers.push(marker);
-        }
-      } 
-    });
-  }, [filteredEvents, isMapLoaded, onSelectShop]);
+  // フィルタされたイベントが変更された時にマーカーを更新
+  useEffect(() => {
+    if (isMapLoaded) {
+      updateMarkers();
+    }
+  }, [filteredEvents, isMapLoaded]);
 
-  // フィルタリング結果の更新
-  const handleFilterResults = useCallback((results: Pwamap.FestivalData[]) => {
+  // データが変更された時にフィルタされたイベントを更新
+  useEffect(() => {
+    setFilteredEvents(data);
+  }, [data]);
+
+  // タブ切り替えハンドラー
+  const handleTabChange = (tab: 'map' | 'list') => {
+    setActiveTab(tab);
+    navigate(tab === 'list' ? '/list' : '/map');
+  };
+
+  // 検索結果ハンドラー
+  const handleSearchResults = (results: Pwamap.FestivalData[]) => {
     setFilteredEvents(results);
-    onSearchResults(results); // App.tsxにも結果を伝える
-  }, [onSearchResults]);
+    onSearchResults(results);
+  };
 
   return (
     <div className="hybrid-view">
-      <SearchFeature
-        data={data}
-        onSearchResults={handleFilterResults}
-        onSelectShop={onSelectShop}
-      />
+      {/* 検索機能 */}
+      <div className="search-section">
+        <SearchFeature 
+          data={data} 
+          onSearchResults={handleSearchResults}
+          onSelectShop={(event) => {
+            const lat = parseFloat(event.緯度);
+            const lng = parseFloat(event.経度);
+            if (!isNaN(lat) && !isNaN(lng)) {
+              const mapPoint: MapPointBase = {
+                index: 0,
+                緯度: event.緯度,
+                経度: event.経度,
+                お祭り名: event.お祭り名,
+                住所: event.住所 || '',
+                簡単な説明: event.簡単な説明 || ''
+              };
+              onSelectShop(mapPoint);
+            }
+          }}
+        />
+      </div>
 
-      <div className="view-tabs">
-        <button
-          className={`view-tab ${activeTab === 'map' ? 'active' : ''}`}
-          onClick={() => navigate('/map')}
+      {/* タブ切り替え */}
+      <div className="tab-switcher">
+        <button 
+          className={`tab-button ${activeTab === 'map' ? 'active' : ''}`}
+          onClick={() => handleTabChange('map')}
         >
+          <span className="tab-icon">🗺️</span>
           地図
         </button>
-        <button
-          className={`view-tab ${activeTab === 'list' ? 'active' : ''}`}
-          onClick={() => navigate('/list')}
+        <button 
+          className={`tab-button ${activeTab === 'list' ? 'active' : ''}`}
+          onClick={() => handleTabChange('list')}
         >
+          <span className="tab-icon">📋</span>
           リスト
         </button>
       </div>
 
-      <div className="view-content">
+      {/* コンテンツエリア */}
+      <div className="content-area">
         {activeTab === 'map' && (
-          <div
-            ref={mapRef}
-            className="map-container"
-            style={{ width: '100%', height: '100%' }}
-          />
+          <div className="map-section">
+            <div 
+              ref={mapRef} 
+              className="map-container"
+              style={{ width: '100%', height: '100%', minHeight: '500px' }}
+            />
+            {!isMapLoaded && (
+              <div className="map-loading">
+                <div className="loading-spinner">地図を読み込んでいます...</div>
+              </div>
+            )}
+            {isMapLoaded && filteredEvents.length === 0 && (
+              <div className="no-events-overlay">
+                <div className="no-events-message">
+                  検索条件に一致するイベントがありません
+                </div>
+              </div>
+            )}
+          </div>
         )}
+
         {activeTab === 'list' && (
-          <div className="list-container">
-            {filteredEvents.length === 0 ? (
-              <div className="no-results">該当するイベントがありません</div>
-            ) : (
+          <div className="list-section">
+            {filteredEvents.length > 0 ? (
               <div className="event-list">
-                {filteredEvents.map((event, _index) => (
-                  <div key={event.index} className="event-card" onClick={() => onSelectShop(event)}>
-                    {/* EventCardの内容をここに記述、または既存のEventCardコンポーネントを再利用 */}
-                    <h3>{event.お祭り名}</h3>
-                    <p>{event.開催場所名}</p>
-                    <p>{event.開始日}</p>
+                {filteredEvents.map((event, index) => (
+                  <div 
+                    key={`${event.お祭り名}-${index}`} 
+                    className="event-item"
+                    onClick={() => {
+                      const lat = parseFloat(event.緯度);
+                      const lng = parseFloat(event.経度);
+                      if (!isNaN(lat) && !isNaN(lng)) {
+                        const mapPoint: MapPointBase = {
+                          index: 0, // 仮のindex値
+                          緯度: event.緯度,
+                          経度: event.経度,
+                          お祭り名: event.お祭り名,
+                          住所: event.住所 || '',
+                          簡単な説明: event.簡単な説明 || ''
+                        };
+                        onSelectShop(mapPoint);
+                        handleTabChange('map'); // 地図タブに切り替え
+                      }
+                    }}
+                  >
+                    <h3 className="event-name">{event.お祭り名}</h3>
+                    <div className="event-details">
+                      <div className="event-location">📍 {event.開催場所名}</div>
+                      <div className="event-date">📅 {event.開始日}</div>
+                      <div className="event-price">
+                        💰 {event.無料か有料か === 'TRUE' ? '無料' : '有料'}
+                      </div>
+                    </div>
+                    {event.簡単な説明 && (
+                      <div className="event-description">{event.簡単な説明}</div>
+                    )}
                   </div>
                 ))}
+              </div>
+            ) : (
+              <div className="no-events-message">
+                検索条件に一致するイベントがありません
               </div>
             )}
           </div>
