@@ -76,18 +76,19 @@ const MultiMapView: React.FC<MultiMapViewProps> = ({
 
     checkGeoloniaAPI();
 
-    // クリーンアップ
+    // クリーンアップ - ESLintエラーを回避するため、エフェクト実行時にrefを保存
+    const currentMarkersRef = markersRef.current;
+    const currentMapInstance = mapInstanceRef.current;
+    
     return () => {
       // 全てのマーカーを削除
-      const currentMarkersRef = markersRef.current;
       currentMarkersRef.forEach(marker => {
         marker.remove();
       });
       currentMarkersRef.clear();
       
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
+      if (currentMapInstance) {
+        currentMapInstance.remove();
       }
     };
   }, [initializeMap]);
