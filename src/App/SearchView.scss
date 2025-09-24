@@ -11,7 +11,7 @@
   flex-direction: column !important;
   background-color: #f8f9fa !important;
   position: relative !important;
-  z-index: 1 !important; /* フッターより下に配置 */
+  z-index: 10 !important; /* 地図より高く設定 */
   overflow: hidden !important;
   visibility: visible !important;
   opacity: 1 !important;

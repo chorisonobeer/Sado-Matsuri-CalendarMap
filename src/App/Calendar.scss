@@ -1,8 +1,19 @@
 .calendar-view {
+  width: 100% !important;
+  height: calc(100vh - 50px) !important; /* フッターの高さを考慮 */
+  display: flex !important;
+  flex-direction: column !important;
+  background-color: #f8f9fa !important;
+  position: relative !important;
+  z-index: 10 !important; /* 地図より高く設定 */
+  overflow: hidden !important;
+  visibility: visible !important;
+  opacity: 1 !important;
   padding: 16px;
-  max-width: 900px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   font-family: sans-serif;
+  box-sizing: border-box;
 
   .calendar-header {
     display: flex;
@@ -36,6 +47,8 @@
     border: 1px solid #eee;
     border-radius: 8px;
     overflow: hidden;
+    flex: 1;
+    min-height: 0;
 
     .calendar-weekday {
       background-color: #f8f8f8;

@@ -7,6 +7,8 @@ interface CalendarProps {
 }
 
 const Calendar: React.FC<CalendarProps> = ({ data }) => {
+  console.log('Calendar component rendering with data:', data?.length || 0);
+  
   const [currentDate, setCurrentDate] = useState(new Date()); // 現在表示している月の基準日
   const [selectedDateEvents, setSelectedDateEvents] = useState<Pwamap.FestivalData[]>([]); // 選択した日付のイベント
   const [isModalOpen, setIsModalOpen] = useState(false);

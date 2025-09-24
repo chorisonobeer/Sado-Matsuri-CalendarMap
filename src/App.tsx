@@ -161,6 +161,11 @@ const App: React.FC = React.memo(() => {
 
   // 永続化されたMapコンポーネント
   const persistentMap = useMemo(() => {
+    // カレンダータブでは地図を非表示にする
+    if (location.pathname === '/calendar') {
+      return null;
+    }
+    
     return (
       <LazyMap
         data={filteredShops} 
@@ -174,7 +179,7 @@ const App: React.FC = React.memo(() => {
           left: 0,
           width: '100%',
           height: 'calc(100% - 50px)',
-          zIndex: location.pathname === '/' ? -1 : 5,
+          zIndex: location.pathname === '/' ? -1 : 1, // zIndexを下げる
           pointerEvents: location.pathname === '/' ? 'none' : 'auto'
         }}
       />
@@ -200,9 +205,12 @@ const App: React.FC = React.memo(() => {
       <Route path="/about" element={<AboutUs />} />
       <Route path="/events" element={<Events />} />
       <Route path="/calendar" element={ // /calendar ルートを追加
-        <Calendar
-          data={shopList}
-        />
+        <>
+          {console.log('Rendering Calendar route with data:', shopList?.length || 0)}
+          <Calendar
+            data={shopList}
+          />
+        </>
       } />
       <Route path="/info" element={<AboutUs />} /> {/* /info ルートを追加 */}
     </Routes>
