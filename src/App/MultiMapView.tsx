@@ -196,12 +196,12 @@ const MultiMapView: React.FC<MultiMapViewProps> = ({
 
   // コンポーネントのクリーンアップ
   useEffect(() => {
+    const currentMarkersRef = markersRef.current;
     return () => {
-      const currentMarkers = markersRef.current;
-      currentMarkers.forEach(marker => {
+      currentMarkersRef.forEach(marker => {
         marker.setMap(null);
       });
-      currentMarkers.clear();
+      currentMarkersRef.clear();
     };
   }, []);
 

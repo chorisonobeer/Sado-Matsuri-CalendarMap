@@ -214,7 +214,7 @@ const App: React.FC = React.memo(() => {
       } />
       <Route path="/info" element={<AboutUs />} /> {/* /info ルートを追加 */}
     </Routes>
-  ), [shopList, selectedShop, handleSelectShop, handleSearchResults]);
+  ), [shopList]);
 
   if (error) return <div className="app-error">{error}</div>;
 
