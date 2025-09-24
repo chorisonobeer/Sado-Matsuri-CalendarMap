@@ -92,7 +92,7 @@ const SearchView: React.FC<SearchViewProps> = ({ events }) => {
 
       return matchesSearch && matchesTags;
     });
-  }, [events, searchQuery, selectedTags, regionTags, tags]);
+  }, [events, searchQuery, selectedTags, regionTags]);
 
   // タグ選択ハンドラー
   const handleTagToggle = useCallback((tag: string) => {
