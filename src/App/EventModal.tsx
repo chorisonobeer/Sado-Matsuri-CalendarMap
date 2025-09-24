@@ -97,6 +97,29 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }) => {
 
   const eventImages = getEventImages();
 
+  // GoogleMapアプリでルート案内を開く
+  const openGoogleMapsRoute = () => {
+    const lat = parseFloat(event.緯度);
+    const lng = parseFloat(event.経度);
+    
+    let url = '';
+    
+    if (!isNaN(lat) && !isNaN(lng)) {
+      // 座標が有効な場合は座標を使用
+      url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    } else if (event.住所) {
+      // 座標が無効な場合は住所を使用
+      const encodedAddress = encodeURIComponent(event.住所);
+      url = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}&travelmode=driving`;
+    } else {
+      alert('位置情報が取得できませんでした');
+      return;
+    }
+    
+    // 外部アプリ（GoogleMap）を起動
+    window.open(url, '_blank');
+  };
+
   // 画像切り替え
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % eventImages.length);
@@ -189,7 +212,21 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }) => {
               {event.住所 && (
                 <div className="detail-item">
                   <span className="label">住所:</span>
-                  <span className="value">{event.住所}</span>
+                  <span 
+                    className="value address-link" 
+                    onClick={() => openGoogleMapsRoute()}
+                    style={{ 
+                      color: '#1976d2', 
+                      textDecoration: 'underline', 
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                  >
+                    {event.住所}
+                    <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px' }}>
+                      (タップでルート案内)
+                    </span>
+                  </span>
                 </div>
               )}
               <div className="detail-item">

@@ -115,6 +115,18 @@ const MultiMapView: React.FC<MultiMapViewProps> = ({
         .setLngLat([lng, lat])
         .addTo(mapInstanceRef.current);
 
+      // GoogleMap風のDropアニメーション効果を追加
+      const markerElement = marker.getElement();
+      markerElement.style.transform = 'translateY(-100px)';
+      markerElement.style.opacity = '0';
+      markerElement.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease-in';
+      
+      // アニメーション開始
+      setTimeout(() => {
+        markerElement.style.transform = 'translateY(0)';
+        markerElement.style.opacity = '1';
+      }, 100);
+
       // マーカークリックイベント
       marker.getElement().addEventListener('click', () => {
         console.log('Marker clicked:', event.お祭り名);
@@ -231,7 +243,7 @@ const MultiMapView: React.FC<MultiMapViewProps> = ({
         if (!isNaN(lat) && !isNaN(lng)) {
           mapInstanceRef.current.flyTo({
             center: [lng, lat],
-            zoom: 15,
+            zoom: 12, // 15から12に変更：広域からピンが見えるように調整
             duration: 1000
           });
         }
