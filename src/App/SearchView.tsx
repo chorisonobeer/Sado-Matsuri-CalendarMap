@@ -30,17 +30,39 @@ const SearchView: React.FC<SearchViewProps> = ({ events }) => {
   // 地域タグの定義
   const regionTags = useMemo(() => ['両津', '相川', '佐和田', '金井', '新穂', '畑野', '真野', '小木', '羽茂', '赤泊'], []);
   
-  // カテゴリタグの定義
-  const categoryTags = useMemo(() => ['祭り', '芸能', '文化', '自然', '体験', '食事', '宿泊'], []);
+  // タグの定義（カテゴリから変更）
+  const tags = useMemo(() => ['開催中', '鬼太鼓', '無料', '祭り', '芸能', '文化', '自然', '体験', '食事', '宿泊'], []);
+
+  // 全項目での全文検索関数
+  const searchInAllFields = (event: Pwamap.FestivalData, query: string): boolean => {
+    const lowerQuery = query.toLowerCase();
+    const fieldsToSearch = [
+      event.お祭り名,
+      event.簡単な説明,
+      event.開催場所名,
+      event.住所,
+      event.上位カテゴリ,
+      event.詳細タグ,
+      event.見どころ,
+      event.アクセス方法,
+      event.開催ステータス,
+      // 日付や時刻も検索対象に含める
+      event.開始日,
+      event.終了日,
+      event.開始時刻,
+      event.終了時刻
+    ];
+
+    return fieldsToSearch.some(field => 
+      field && field.toString().toLowerCase().includes(lowerQuery)
+    );
+  };
 
   // イベントフィルタリング
   const filteredEvents = useMemo(() => {
     return events.filter(event => {
-      // 検索クエリによるフィルタリング
-      const matchesSearch = !searchQuery || 
-        event.お祭り名?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.開催場所名?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.概要?.toLowerCase().includes(searchQuery.toLowerCase());
+      // 検索クエリによる全項目全文検索
+      const matchesSearch = !searchQuery || searchInAllFields(event, searchQuery);
 
       // タグによるフィルタリング
       const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => {
@@ -48,13 +70,29 @@ const SearchView: React.FC<SearchViewProps> = ({ events }) => {
         if (regionTags.includes(tag)) {
           return event.開催場所名?.includes(tag) || event.住所?.includes(tag);
         }
-        // カテゴリタグのチェック
-        return event.お祭り名?.includes(tag) || event.概要?.includes(tag);
+        
+        // 特別なタグのチェック
+        if (tag === '開催中') {
+          return event.開催ステータス?.includes('開催中') || event.開催ステータス?.includes('実施中');
+        }
+        
+        if (tag === '鬼太鼓') {
+          return event.お祭り名?.includes('鬼太鼓') || 
+                 event.詳細タグ?.includes('鬼太鼓') || 
+                 event.見どころ?.includes('鬼太鼓');
+        }
+        
+        if (tag === '無料') {
+          return event.無料か有料か === 'TRUE' || event.無料か有料か?.includes('無料');
+        }
+        
+        // その他のタグのチェック（全項目で検索）
+        return searchInAllFields(event, tag);
       });
 
       return matchesSearch && matchesTags;
     });
-  }, [events, searchQuery, selectedTags, regionTags]);
+  }, [events, searchQuery, selectedTags, regionTags, tags]);
 
   // タグ選択ハンドラー
   const handleTagToggle = useCallback((tag: string) => {
@@ -112,9 +150,9 @@ const SearchView: React.FC<SearchViewProps> = ({ events }) => {
           </div>
         </div>
         <div className="tag-section">
-          <h3>カテゴリ</h3>
+          <h3>タグ</h3>
           <div className="tag-buttons">
-            {categoryTags.map(tag => (
+            {tags.map(tag => (
               <button
                 key={tag}
                 className={`tag-button ${selectedTags.includes(tag) ? 'active' : ''}`}
