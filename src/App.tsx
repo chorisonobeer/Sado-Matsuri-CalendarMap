@@ -148,10 +148,6 @@ const App: React.FC = React.memo(() => {
     }
   }, [shopList]); // shopListを依存配列に追加
 
-  const handleSearchResults = useCallback((results: Pwamap.FestivalData[]) => {
-    setFilteredShops(results);
-  }, []);
-
   // データが更新されたときにフィルタリング結果も更新
   useEffect(() => {
     if (shopList.length > 0) {
@@ -214,7 +210,7 @@ const App: React.FC = React.memo(() => {
       } />
       <Route path="/info" element={<AboutUs />} /> {/* /info ルートを追加 */}
     </Routes>
-  ), [shopList]);
+  ), [shopList, handleSelectShop]);
 
   if (error) return <div className="app-error">{error}</div>;
 
