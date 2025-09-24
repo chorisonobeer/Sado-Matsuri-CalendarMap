@@ -20,7 +20,7 @@ const Content = (props: Props) => {
   
   // カテゴリの分割処理
   const categories = props.data['カテゴリ'] 
-    ? props.data['カテゴリ'].split(/,|、|\s+/).map(cat => cat.trim()).filter(cat => cat !== '')
+    ? props.data['カテゴリ'].split(/,|、|\s+/).map((cat: string) => cat.trim()).filter((cat: string) => cat !== '')
     : [];
   
   const image = props.data['画像'];
@@ -36,7 +36,7 @@ const Content = (props: Props) => {
       </h2>
       <div className='tag-box'>
         {
-          !isCategoryPage && categories.map((category, index) => (
+          !isCategoryPage && categories.map((category: string, index: number) => (
             <span className="nowrap" key={`cat-${index}`}>
               <Link to={`/list?category=${category}`}>
                 <span className="category">{category}</span>

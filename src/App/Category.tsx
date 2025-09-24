@@ -28,8 +28,8 @@ const Content = (props: Props) => {
         // カンマ、全角カンマ、空白で分割してカテゴリを追加
         const shopCategories = shop['カテゴリ']
           .split(/,|、|\s+/)
-          .map(cat => cat.trim())
-          .filter(cat => cat !== '');
+          .map((cat: string) => cat.trim())
+          .filter((cat: string) => cat !== '');
         
         for (const category of shopCategories) {
           if (categories.indexOf(category) === -1) {

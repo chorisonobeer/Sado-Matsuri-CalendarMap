@@ -109,7 +109,7 @@ const Events: React.FC = () => {
                       (feature[key] as string) = value.trim();
                     }
                   });
-                  const event = { index: i, ...feature };
+                  const event = { ...feature, index: i };
                   nextEventList.push(event);
                 }
                 // 差分があればキャッシュ・state更新
@@ -168,7 +168,7 @@ const Events: React.FC = () => {
               const v = (feature as any)[key];
               if (typeof v === 'string') (feature as any)[key] = stripWrappingQuotes(v);
             });
-            return { index: i, ...feature } as EventData;
+            return { ...feature, index: i } as EventData;
           }
         });
         setEventList(features);

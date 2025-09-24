@@ -11,8 +11,8 @@ import './Home.scss';
 
 type Props = {
   data: Pwamap.FestivalData[];
-  selectedShop?: Pwamap.FestivalData;
-  onSelectShop: (shop: Pwamap.FestivalData) => void;
+  selectedShop: Pwamap.FestivalData | undefined;
+  onSelectShop: (shop: Pwamap.FestivalData | undefined) => void;
   onSearchResults: (results: Pwamap.FestivalData[]) => void;
 };
 
@@ -24,7 +24,7 @@ const Home: React.FC<Props> = React.memo((props) => {
 
   // Shop閉じる処理
   const handleCloseShop = useCallback(() => {
-    onSelectShop(undefined as any);
+    onSelectShop(undefined);
   }, [onSelectShop]);
 
   // メモ化されたコンポーネント

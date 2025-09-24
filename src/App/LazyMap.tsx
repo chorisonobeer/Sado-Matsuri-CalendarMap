@@ -29,7 +29,7 @@ function LazyMap<T extends MapPointBase = MapPointBase>(props: MapProps<T> & { s
   return (
     <div style={style}>
       <Suspense fallback={<MapSkeleton />}>
-        <Map {...mapProps} />
+        <Map {...(mapProps as MapProps<T>)} />
       </Suspense>
     </div>
   );

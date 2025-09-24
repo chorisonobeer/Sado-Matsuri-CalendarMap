@@ -6,13 +6,12 @@
 
 import React, { useState, useCallback } from 'react';
 import EventCard from './EventCard';
-import MapView from './MapView';
 import EventModal from './EventModal';
 import './Dashboard.scss';
 
 interface DashboardProps {
   data: Pwamap.FestivalData[];
-  selectedShop?: Pwamap.FestivalData;
+  selectedShop: Pwamap.FestivalData | undefined;
   onSelectShop: (shop: Pwamap.FestivalData) => void;
 }
 
@@ -28,38 +27,51 @@ const Dashboard: React.FC<DashboardProps> = ({
     onSelectShop(event);
   }, [onSelectShop]);
 
-  const handleMarkerUpdate = useCallback((_marker: google.maps.Marker | null) => {
-    // マーカー更新処理（必要に応じて実装）
-  }, []);
-
   const handleCloseModal = useCallback(() => {
     setSelectedEvent(null);
   }, []);
+
+  // 直近のイベントをフィルタリング・ソート
+  const upcomingEvents = React.useMemo(() => {
+    const now = new Date();
+    return data
+      .filter(event => {
+        const eventDate = Date.parse(event['開始日'] || '');
+        return eventDate && eventDate >= now.getTime();
+      })
+      .sort((item1, item2) => {
+        // 1. 開始日優先 (昇順)
+        const dateA = Date.parse(item1['開始日'] || '');
+        const dateB = Date.parse(item2['開始日'] || '');
+        if (dateA && dateB && dateA !== dateB) {
+          return dateA - dateB;
+        }
+        // 2. お祭り名のあいうえお順 (昇順)
+        const nameA = item1['お祭り名'] || '';
+        const nameB = item2['お祭り名'] || '';
+        return nameA.localeCompare(nameB, 'ja');
+      });
+  }, [data]);
 
   return (
     <div className="dashboard">
       <div className="dashboard-content">
         <div className="events-section">
-          <h2>佐渡の祭り・イベント</h2>
+          <h2>直近の佐渡祭り・イベント</h2>
           <div className="events-list">
-            {data.map((event, index) => (
-              <EventCard
-                key={`${event['お祭り名']}-${index}`}
-                event={event}
-                isSelected={selectedShop?.['お祭り名'] === event['お祭り名']}
-                onClick={handleEventSelect}
-              />
-            ))}
+            {upcomingEvents.length === 0 ? (
+              <p>直近のイベント情報はありません。</p>
+            ) : (
+              upcomingEvents.map((event, index) => (
+                <EventCard
+                  key={`${event['お祭り名']}-${index}`}
+                  event={event}
+                  isSelected={selectedShop?.['お祭り名'] === event['お祭り名']}
+                  onClick={handleEventSelect}
+                />
+              ))
+            )}
           </div>
-        </div>
-        
-        <div className="map-section">
-          <MapView
-            events={data}
-            selectedEvent={selectedShop}
-            onEventSelect={handleEventSelect}
-            onMarkerUpdate={handleMarkerUpdate}
-          />
         </div>
       </div>
 

@@ -9,6 +9,7 @@ import './MapView.scss';
 
 interface MapViewProps {
   selectedEvent: Pwamap.FestivalData | null | undefined;
+  onEventSelect: (event: Pwamap.FestivalData) => void;
   onMarkerUpdate: (marker: google.maps.Marker | null) => void;
 }
 

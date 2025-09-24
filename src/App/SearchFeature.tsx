@@ -9,29 +9,29 @@ type Props = {
 
 const SearchFeature: React.FC<Props> = ({ data, onSearchResults, onSelectShop }) => {
   const [query, setQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]); // 複数タグ選択に対応
   const [selectedArea, setSelectedArea] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>(""); // 開催ステータス用の状態を追加
   const [isOpenNow, setIsOpenNow] = useState(false);
   const [hasParking, setHasParking] = useState(false);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]); // 利用可能なタグ一覧
   const [areas, setAreas] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<string[]>([]); // 開催ステータス一覧を追加
   const [showResults, setShowResults] = useState(false);
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  // const [showCategoryDropdown, setShowCategoryDropdown] = useState(false); // 削除
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState<boolean>(false); // 開催ステータス用のドロップダウン状態を追加
   const [filteredResults, setFilteredResults] = useState<Pwamap.FestivalData[]>([]);
-  const categoryDropdownRef = useRef<HTMLDivElement>(null);
+  // const categoryDropdownRef = useRef<HTMLDivElement>(null); // 削除
   const areaDropdownRef = useRef<HTMLDivElement>(null);
   const statusDropdownRef = useRef<HTMLDivElement>(null); // 開催ステータス用のrefを追加
 
   // クリック外のイベントを監視して、ドロップダウンを閉じる
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
-        setShowCategoryDropdown(false);
-      }
+      // if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) { // 削除
+      //   setShowCategoryDropdown(false); // 削除
+      // }
       if (areaDropdownRef.current && !areaDropdownRef.current.contains(event.target as Node)) {
         setShowAreaDropdown(false);
       }
@@ -46,20 +46,28 @@ const SearchFeature: React.FC<Props> = ({ data, onSearchResults, onSelectShop })
     };
   }, []);
 
-  // カテゴリ一覧を作成
+  // タグ一覧を作成 (上位カテゴリと詳細タグから)
   useEffect(() => {
     if (data.length > 0) {
-      const allCategories = data
-        .map(shop => shop['上位カテゴリ'])
+      const allTags = data
+        .flatMap(item => {
+          const tags: string[] = [];
+          if (item['上位カテゴリ']) {
+            tags.push(...item['上位カテゴリ'].split(/,|、|\s+/));
+          }
+          if (item['詳細タグ']) {
+            tags.push(...item['詳細タグ'].split(/,|、|\s+/));
+          }
+          return tags;
+        })
         .filter(Boolean)
-        .flatMap(category => category.split(/,|、|\s+/))
-        .map(category => category.trim())
-        .filter(category => category !== '');
+        .map(tag => tag.trim())
+        .filter(tag => tag !== '');
       
-      const uniqueCategories = Array.from(new Set(allCategories))
+      const uniqueTags = Array.from(new Set(allTags))
         .sort();
       
-      setCategories(uniqueCategories);
+      setAvailableTags(uniqueTags);
     }
   }, [data]);
 
@@ -79,17 +87,7 @@ const SearchFeature: React.FC<Props> = ({ data, onSearchResults, onSelectShop })
     }
   }, [data]);
 
-  // カテゴリごとの件数を計算
-  const getCategoryCount = (category: string): number => {
-    return data.filter(shop => {
-      if (!shop['上位カテゴリ']) return false;
-      const shopCategories = shop['上位カテゴリ']
-        .split(/,|、|\s+/)
-        .map(cat => cat.trim())
-        .filter(cat => cat !== '');
-      return shopCategories.includes(category);
-    }).length;
-  };
+// const getCategoryCount = ...; // 未使用のため削除
 
   // 開催ステータスごとの件数を計算
   const getStatusCount = (status: string): number => {
@@ -131,7 +129,7 @@ const SearchFeature: React.FC<Props> = ({ data, onSearchResults, onSelectShop })
         .split(/,|、|\s+/)
         .map((day: string) => day.trim())
         .filter((day: string) => day !== '');
-      if (closedDays.some(day => day.includes(dayOfWeek))) {
+      if (closedDays.some((day: string) => day.includes(dayOfWeek))) {
         return false;
       }
     }
@@ -183,12 +181,17 @@ const SearchFeature: React.FC<Props> = ({ data, onSearchResults, onSelectShop })
         if (!matchesQuery) return false;
       }
 
-      // カテゴリフィルター
-      if (selectedCategory) {
-        const shopCategories = shop['上位カテゴリ']
-          ? shop['上位カテゴリ'].split(/,|、|\s+/).map(cat => cat.trim())
-          : [];
-        if (!shopCategories.includes(selectedCategory)) return false;
+      // タグフィルター (複数選択対応)
+      if (selectedTags.length > 0) {
+        const itemTags = [
+          ...(shop['上位カテゴリ'] ? shop['上位カテゴリ'].split(/,|、|\s+/) : []),
+          ...(shop['詳細タグ'] ? shop['詳細タグ'].split(/,|、|\s+/) : [])
+        ].map(tag => tag.trim()).filter(tag => tag !== '');
+        
+        // 選択されたすべてのタグがアイテムに含まれているかチェック (AND条件)
+        if (!selectedTags.every(selectedTag => itemTags.includes(selectedTag))) {
+          return false;
+        }
       }
 
       // エリアフィルター
@@ -208,7 +211,7 @@ const SearchFeature: React.FC<Props> = ({ data, onSearchResults, onSelectShop })
 
     setFilteredResults(filtered);
     onSearchResults(filtered);
-  }, [data, query, selectedCategory, selectedArea, selectedStatus, isOpenNow, hasParking, onSearchResults]);
+  }, [data, query, selectedTags, selectedArea, selectedStatus, isOpenNow, hasParking, onSearchResults]);
 
   // 開催ステータス選択ハンドラー
   const handleStatusSelect = (status: string) => {
@@ -217,7 +220,7 @@ const SearchFeature: React.FC<Props> = ({ data, onSearchResults, onSelectShop })
     
     // 「すべて」選択時は全てのフィルター条件をリセット
     if (status === '') {
-      setSelectedCategory('');
+      setSelectedTags([]); // selectedCategoryの代わりにselectedTagsをリセット
       setSelectedArea('');
       setIsOpenNow(false);
       setHasParking(false);
@@ -245,21 +248,15 @@ const SearchFeature: React.FC<Props> = ({ data, onSearchResults, onSelectShop })
     setShowResults(newQuery.trim() !== '');
   };
 
-  // カテゴリ選択ハンドラー
-  const handleCategorySelect = (category: string) => {
-    setSelectedCategory(category);
-    setShowCategoryDropdown(false);
-    
-    // 「すべて」選択時は全てのフィルター条件をリセット
-    if (category === '') {
-      setSelectedArea('');
-      setIsOpenNow(false);
-      setHasParking(false);
-      setQuery('');
-      setShowResults(false);
-      // 全データを表示するためにonSearchResultsを呼び出し
-      onSearchResults(data);
-    }
+  // タグ選択切り替えハンドラー
+  const handleTagToggle = (tag: string) => {
+    setSelectedTags(prevTags => {
+      if (prevTags.includes(tag)) {
+        return prevTags.filter(t => t !== tag); // 既に選択されていれば削除
+      } else {
+        return [...prevTags, tag]; // 選択されていなければ追加
+      }
+    });
   };
 
   // エリア選択ハンドラー
@@ -269,7 +266,7 @@ const SearchFeature: React.FC<Props> = ({ data, onSearchResults, onSelectShop })
     
     // 「すべて」選択時は全てのフィルター条件をリセット
     if (area === '') {
-      setSelectedCategory('');
+      setSelectedTags([]); // selectedCategoryの代わりにselectedTagsをリセット
       setIsOpenNow(false);
       setHasParking(false);
       setQuery('');
@@ -313,36 +310,21 @@ const SearchFeature: React.FC<Props> = ({ data, onSearchResults, onSelectShop })
 
       <div className="filter-container">
         <div className="filter-row first-row">
-          {/* カテゴリドロップダウン */}
-          <div className="filter-item category-filter" ref={categoryDropdownRef}>
-            <div 
-              className={`custom-dropdown-header ${selectedCategory !== '' ? 'active' : ''}`}
-              onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-            >
-              {selectedCategory === '' ? 'カテゴリ' : selectedCategory}
-              <span className="dropdown-icon">▼</span>
-            </div>
-            {showCategoryDropdown && (
-              <div className="custom-dropdown-list">
-                <div 
-                  className="custom-dropdown-item"
-                  onClick={() => handleCategorySelect('')}
-                >
-                  <span className="dropdown-item-text">すべて</span>
-                  <span className="dropdown-item-count">{data.length}</span>
-                </div>
-                {categories.map((category) => (
-                  <div
-                    key={category}
-                    className="custom-dropdown-item"
-                    onClick={() => handleCategorySelect(category)}
+          {/* タグフィルター (横スクロールカルーセル) */}
+          <div className="filter-item tag-filter-carousel">
+            <div className="tag-carousel-wrapper">
+              <div className="tag-carousel">
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag}
+                    className={`tag-button ${selectedTags.includes(tag) ? 'active' : ''}`}
+                    onClick={() => handleTagToggle(tag)}
                   >
-                    <span className="dropdown-item-text">{category}</span>
-                    <span className="dropdown-item-count">{getCategoryCount(category)}</span>
-                  </div>
+                    #{tag}
+                  </button>
                 ))}
               </div>
-            )}
+            </div>
           </div>
           
           {/* エリアドロップダウン */}

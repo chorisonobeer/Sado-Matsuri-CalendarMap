@@ -83,7 +83,7 @@ const Shop: React.FC<Props> = (props) => {
 
   // カテゴリの分割処理
   const categories = props.shop["カテゴリ"] 
-    ? props.shop["カテゴリ"].split(/,|、|\s+/).map(cat => cat.trim()).filter(cat => cat !== '')
+    ? props.shop["カテゴリ"].split(/,|、|\s+/).map((cat: string) => cat.trim()).filter((cat: string) => cat !== '')
     : [];
   
   const content = props.shop["紹介文"] || "";
@@ -135,7 +135,7 @@ const Shop: React.FC<Props> = (props) => {
         <h2 className="shop-title">{spotName}</h2>
 
         <div className="tag-box">
-          {categories.map((category, index) => (
+          {categories.map((category: string, index: number) => (
             <Link key={`cat-${index}`} to={`/list?category=${category}`}>
               <span className="category">{category}</span>
             </Link>

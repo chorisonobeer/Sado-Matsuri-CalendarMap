@@ -8,14 +8,15 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { parseCsvByHeader, stripWrappingQuotes } from './lib/csv';
 import { GeolocationProvider } from './context/GeolocationContext';
 import Dashboard from './App/Dashboard';
-import Home from './App/Home';
-import List from './App/List';
 import Category from './App/Category';
 import Images from './App/Images';
 import AboutUs from './App/AboutUs';
 import Events from './App/Events';
 import Tabbar from './App/Tabbar';
 import LazyMap from './App/LazyMap';
+import { MapPointBase } from './App/Map';
+import Calendar from './App/Calendar'; // 追加
+import HybridView from './App/HybridView'; // 追加
 import config from "./config.json";
 import './App.scss';
 
@@ -28,8 +29,19 @@ const App: React.FC = React.memo(() => {
 
   const sortShopList = useCallback((shopList: Pwamap.FestivalData[]) => {
     return new Promise<Pwamap.FestivalData[]>((resolve) => {
-      const sortedList = shopList.sort((item1, item2) => {
-        return Date.parse(item2['タイムスタンプ']) - Date.parse(item1['タイムスタンプ']);
+      const sortedList = [...shopList].sort((item1, item2) => {
+        // 1. 開始日優先 (昇順)
+        const dateA = Date.parse(item1['開始日'] || '');
+        const dateB = Date.parse(item2['開始日'] || '');
+
+        if (dateA && dateB && dateA !== dateB) {
+          return dateA - dateB;
+        }
+
+        // 2. お祭り名のあいうえお順 (昇順)
+        const nameA = item1['お祭り名'] || '';
+        const nameB = item2['お祭り名'] || '';
+        return nameA.localeCompare(nameB, 'ja');
       });
       resolve(sortedList);
     });
@@ -126,9 +138,15 @@ const App: React.FC = React.memo(() => {
   }, [sortShopList]);
 
   // 店舗選択ハンドラ
-  const handleSelectShop = useCallback((shop: Pwamap.FestivalData) => {
-    setSelectedShop(shop);
-  }, []);
+  const handleSelectShop = useCallback((shop: MapPointBase | undefined) => {
+    if (shop) {
+      // shopListから対応するFestivalDataを見つける
+      const fullShopData = shopList.find(item => item.index === shop.index);
+      setSelectedShop(fullShopData); // fullShopDataはFestivalData | undefined型
+    } else {
+      setSelectedShop(undefined);
+    }
+  }, [shopList]); // shopListを依存配列に追加
 
   const handleSearchResults = useCallback((results: Pwamap.FestivalData[]) => {
     setFilteredShops(results);
@@ -171,22 +189,31 @@ const App: React.FC = React.memo(() => {
           data={shopList} 
           selectedShop={selectedShop}
           onSelectShop={handleSelectShop}
-          onSearchResults={handleSearchResults}
         />
       } />
-      <Route path="/home" element={
-        <Home 
-          data={shopList} 
-          selectedShop={selectedShop}
+      <Route path="/map" element={ // /map ルートを追加
+        <HybridView
+          data={shopList}
           onSelectShop={handleSelectShop}
           onSearchResults={handleSearchResults}
         />
       } />
-      <Route path="/list" element={<List data={shopList} />} />
+      <Route path="/list" element={ // /list も HybridView に変更
+        <HybridView
+          data={shopList}
+          onSelectShop={handleSelectShop}
+          onSearchResults={handleSearchResults}
+        />
+      } />
       <Route path="/category" element={<Category data={shopList} />} />
       <Route path="/images" element={<Images data={shopList} />} />
       <Route path="/about" element={<AboutUs />} />
       <Route path="/events" element={<Events />} />
+      <Route path="/calendar" element={ // /calendar ルートを追加
+        <Calendar
+          data={shopList}
+        />
+      } />
     </Routes>
   ), [shopList, selectedShop, handleSelectShop, handleSearchResults]);
 

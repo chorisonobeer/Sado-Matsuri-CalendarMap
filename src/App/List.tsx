@@ -184,7 +184,7 @@ const Content = (props: Props) => {
         if (queryCategory) {
           filteredData = props.data.filter((shop) => {
             const shopCategories = shop['カテゴリ']
-              ? shop['カテゴリ'].split(/,|、|\s+/).map(cat => cat.trim())
+              ? shop['カテゴリ'].split(/,|、|\s+/).map((cat: string) => cat.trim())
               : [];
             return shopCategories.includes(queryCategory);
           });

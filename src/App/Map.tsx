@@ -22,8 +22,8 @@ export type MapPointBase = {
 
 export type MapProps<T extends MapPointBase = MapPointBase> = {
   data: T[];
-  selectedShop?: T;
-  onSelectShop: (shop: T) => void;
+  selectedShop: T | undefined;
+  onSelectShop: (shop: MapPointBase) => void;
   initialData?: T[];
   isEventMode?: boolean;
 };
