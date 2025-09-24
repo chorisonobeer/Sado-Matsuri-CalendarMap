@@ -1,12 +1,12 @@
 /** 
  * /src/App/Tabbar.tsx
- * 2025-01-14T15:30+09:00
- * 変更概要: 要件定義書に沿ったタブ構成に修正（ダッシュボード|地図|リスト|カレンダー|情報）
+ * 2025-01-25T10:00+09:00
+ * 変更概要: 「地図」「リスト」タブを削除し「検索」タブに統合（ダッシュボード|検索|カレンダー|情報）
  */
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiHome, FiMap, FiList, FiCalendar, FiInfo } from 'react-icons/fi';
+import { FiHome, FiSearch, FiCalendar, FiInfo } from 'react-icons/fi';
 import './Tabbar.scss';
 
 const Tabbar: React.FC = () => {
@@ -27,21 +27,11 @@ const Tabbar: React.FC = () => {
         
         <li>
           <Link 
-            to="/map" 
-            className={location.pathname === '/map' ? 'active' : ''}
+            to="/search" 
+            className={location.pathname === '/search' ? 'active' : ''}
           >
-            <FiMap className="icon" />
-            <span className="text">地図</span>
-          </Link>
-        </li>
-        
-        <li>
-          <Link 
-            to="/list" 
-            className={location.pathname === '/list' ? 'active' : ''}
-          >
-            <FiList className="icon" />
-            <span className="text">リスト</span>
+            <FiSearch className="icon" />
+            <span className="text">検索</span>
           </Link>
         </li>
         

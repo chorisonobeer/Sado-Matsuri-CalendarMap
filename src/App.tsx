@@ -16,7 +16,7 @@ import Tabbar from './App/Tabbar';
 import LazyMap from './App/LazyMap';
 import { MapPointBase } from './App/Map';
 import Calendar from './App/Calendar'; // 追加
-import HybridView from './App/HybridView'; // 追加
+import SearchView from './App/SearchView'; // 新規追加
 import config from "./config.json";
 import './App.scss';
 
@@ -190,18 +190,9 @@ const App: React.FC = React.memo(() => {
           onSelectShop={handleSelectShop}
         />
       } />
-      <Route path="/map" element={ // /map ルートを追加
-        <HybridView
-          data={shopList}
-          onSelectShop={handleSelectShop}
-          onSearchResults={handleSearchResults}
-        />
-      } />
-      <Route path="/list" element={ // /list も HybridView に変更
-        <HybridView
-          data={shopList}
-          onSelectShop={handleSelectShop}
-          onSearchResults={handleSearchResults}
+      <Route path="/search" element={ // /map と /list を /search に統合
+        <SearchView
+          events={shopList}
         />
       } />
       <Route path="/category" element={<Category data={shopList} />} />
