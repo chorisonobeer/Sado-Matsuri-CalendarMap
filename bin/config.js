@@ -8,6 +8,7 @@ const path = require("path")
 
 const srcConfigFilePath = path.join(process.cwd(), "/config.yml");
 const distConfigFilePath = path.join(process.cwd(), "/src/config.json");
+const envFilePath = path.join(process.cwd(), '.env');
 
 let yamlText;
 try {
@@ -34,15 +35,54 @@ if (!config) {
   process.exit(3);
 }
 
-const envText =
-  Object.keys(config)
-    // オブジェクト等は環境変数として出力しない
-    .filter((key) => typeof config[key] === "string" || typeof config[key] === "number")
-    .map((key) => `REACT_APP_${key.toUpperCase()}="${config[key]}"`)
-    .join("\n") + "\n";
+// 環境変数からGoogle Maps APIキーを取得
+const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY;
 
-// 全ての設定は src/config.json として出力する
+// 既存の.envファイルを読み込み、Google Maps APIキーのみを更新
+let existingEnvContent = '';
+try {
+  existingEnvContent = fs.readFileSync(envFilePath, 'utf8');
+} catch (error) {
+  // .envファイルが存在しない場合は新規作成
+}
+
+// 既存の環境変数を解析
+const existingEnvVars = {};
+existingEnvContent.split('\n').forEach(line => {
+  const trimmedLine = line.trim();
+  if (trimmedLine && !trimmedLine.startsWith('#')) {
+    const [key, ...valueParts] = trimmedLine.split('=');
+    if (key && valueParts.length > 0) {
+      existingEnvVars[key.trim()] = valueParts.join('=').replace(/^"(.*)"$/, '$1');
+    }
+  }
+});
+
+// config.ymlからの環境変数を生成
+const configEnvVars = {};
+Object.keys(config)
+  .filter((key) => typeof config[key] === "string" || typeof config[key] === "number")
+  .forEach((key) => {
+    configEnvVars[`REACT_APP_${key.toUpperCase()}`] = config[key];
+  });
+
+// Google Maps APIキーを環境変数から設定（優先）
+if (googleMapsApiKey) {
+  configEnvVars['REACT_APP_GOOGLE_MAPS_API_KEY'] = googleMapsApiKey;
+}
+
+// 既存の環境変数と新しい設定をマージ（新しい設定が優先）
+const mergedEnvVars = { ...existingEnvVars, ...configEnvVars };
+
+// .envファイルの内容を生成
+const envText = Object.keys(mergedEnvVars)
+  .map(key => `${key}="${mergedEnvVars[key]}"`)
+  .join('\n') + '\n';
+
+// src/config.jsonを生成（APIキーは含めない）
 fs.writeFileSync(distConfigFilePath, JSON.stringify(config, null, 2));
 
-fs.writeFileSync(path.join(process.cwd() , '.env'), envText)
+// .envファイルを更新
+fs.writeFileSync(envFilePath, envText);
+
 process.exit(0);

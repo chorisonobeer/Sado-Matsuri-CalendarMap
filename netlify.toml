@@ -10,7 +10,7 @@
 # プロダクション環境の設定
 [context.production]
   # 環境変数
-  environment = { NODE_VERSION = "20" }
+  environment = { NODE_VERSION = "20", REACT_APP_GOOGLE_MAPS_API_KEY = "AIzaSyB4VEihrycQJKeszHDh3Epy1rFVHpaT_70" }
 
 # リダイレクト設定 - SPAのためのフォールバック
 [[redirects]]

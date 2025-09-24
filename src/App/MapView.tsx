@@ -9,7 +9,6 @@ import './MapView.scss';
 
 interface MapViewProps {
   selectedEvent: Pwamap.FestivalData | null | undefined;
-  onEventSelect: (event: Pwamap.FestivalData) => void;
   onMarkerUpdate: (marker: google.maps.Marker | null) => void;
 }
 
@@ -86,12 +85,18 @@ const MapView: React.FC<MapViewProps> = ({ selectedEvent, onMarkerUpdate }) => {
       const lng = parseFloat(selectedEvent.経度);
 
       if (!isNaN(lat) && !isNaN(lng)) {
+        const position = { lat, lng };
+        
         const marker = new google.maps.Marker({
-          position: { lat, lng },
+          position,
           map: mapInstanceRef.current,
           animation: google.maps.Animation.DROP,
           title: selectedEvent.お祭り名
         });
+
+        // マップの中心をマーカーの位置に移動し、適切なズームレベルに設定
+        mapInstanceRef.current.setCenter(position);
+        mapInstanceRef.current.setZoom(14);
 
         currentMarkerRef.current = marker;
         onMarkerUpdate(marker);

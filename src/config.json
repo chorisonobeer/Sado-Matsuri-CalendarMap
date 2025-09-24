@@ -7,5 +7,10 @@
   "background_image_url": "/back.jpg",
   "primary_color": "#00A0E6",
   "orderby": "distance",
-  "event_data_url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkVNzwuwa9FitLdMn_n7c53_Q4vSdKhAnbgs7QoMU_8Z1PmVdw6BuHak7HkjmutvPBZF_qVsjfS7F-/pub?gid=0&single=true&output=csv"
+  "event_data_url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkVNzwuwa9FitLdMn_n7c53_Q4vSdKhAnbgs7QoMU_8Z1PmVdw6BuHak7HkjmutvPBZF_qVsjfS7F-/pub?gid=0&single=true&output=csv",
+  "center": {
+    "lat": 38,
+    "lng": 138.37
+  },
+  "zoom": 10
 }

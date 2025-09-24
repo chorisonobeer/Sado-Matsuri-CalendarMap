@@ -6,51 +6,67 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import './Tabbar.scss';
 import { FiHome, FiMap, FiList, FiCalendar, FiInfo } from 'react-icons/fi';
+import './Tabbar.scss';
 
-const Content: React.FC = () => {
+const Tabbar: React.FC = () => {
   const location = useLocation();
 
   return (
-    <div className="tabbar">
-      <Link 
-        to="/" 
-        className={location.pathname === '/' ? 'active' : ''}
-      >
-        <FiHome />
-        <span>ダッシュボード</span>
-      </Link>
-      <Link 
-        to="/map" 
-        className={location.pathname === '/map' ? 'active' : ''}
-      >
-        <FiMap />
-        <span>地図</span>
-      </Link>
-      <Link 
-        to="/list" 
-        className={location.pathname === '/list' ? 'active' : ''}
-      >
-        <FiList />
-        <span>リスト</span>
-      </Link>
-      <Link 
-        to="/calendar" 
-        className={location.pathname === '/calendar' ? 'active' : ''}
-      >
-        <FiCalendar />
-        <span>カレンダー</span>
-      </Link>
-      <Link 
-        to="/info" 
-        className={location.pathname === '/info' ? 'active' : ''}
-      >
-        <FiInfo />
-        <span>情報</span>
-      </Link>
-    </div>
+    <nav className="tabbar">
+      <ul>
+        <li>
+          <Link 
+            to="/" 
+            className={location.pathname === '/' ? 'active' : ''}
+          >
+            <FiHome className="icon" />
+            <span className="text">ダッシュボード</span>
+          </Link>
+        </li>
+        
+        <li>
+          <Link 
+            to="/map" 
+            className={location.pathname === '/map' ? 'active' : ''}
+          >
+            <FiMap className="icon" />
+            <span className="text">地図</span>
+          </Link>
+        </li>
+        
+        <li>
+          <Link 
+            to="/list" 
+            className={location.pathname === '/list' ? 'active' : ''}
+          >
+            <FiList className="icon" />
+            <span className="text">リスト</span>
+          </Link>
+        </li>
+        
+        <li>
+          <Link 
+            to="/calendar" 
+            className={location.pathname === '/calendar' ? 'active' : ''}
+          >
+            <FiCalendar className="icon" />
+            <span className="text">カレンダー</span>
+          </Link>
+        </li>
+        
+        <li>
+          <Link 
+            to="/info" 
+            className={location.pathname === '/info' ? 'active' : ''}
+          >
+            <FiInfo className="icon" />
+            <span className="text">情報</span>
+          </Link>
+        </li>
+      </ul>
+    </nav>
   );
 };
 
-export default Content;
+export default Tabbar;

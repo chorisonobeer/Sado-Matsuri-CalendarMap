@@ -187,7 +187,6 @@ const App: React.FC = React.memo(() => {
       <Route path="/" element={
         <Dashboard 
           data={shopList} 
-          selectedShop={selectedShop}
           onSelectShop={handleSelectShop}
         />
       } />
@@ -214,6 +213,7 @@ const App: React.FC = React.memo(() => {
           data={shopList}
         />
       } />
+      <Route path="/info" element={<AboutUs />} /> {/* /info ルートを追加 */}
     </Routes>
   ), [shopList, selectedShop, handleSelectShop, handleSearchResults]);
 

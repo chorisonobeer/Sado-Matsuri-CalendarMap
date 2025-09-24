@@ -1,96 +1,266 @@
 /** 
  * /src/App/Dashboard.scss
- * 2025-01-14T16:20+09:00
- * 変更概要: 新規追加 - ダッシュボードスタイル（2/3イベント一覧、1/3地図表示）
+ * 2025-01-25T15:30+09:00
+ * 変更概要: レスポンシブ対応修正 - 固定サイズを削除し、画面サイズに応じた柔軟なレイアウトに変更
  */
 
+// 全体のコンテナ（レスポンシブ対応）
+body {
+  background-color: #f0f4f8;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
 .dashboard {
+  width: 100%;
+  height: 100vh;
+  background-color: #ffffff;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background-color: #f8f9fa;
-
-  .dashboard-header {
-    padding: 1rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-    h1 {
-      margin: 0;
-      font-size: 1.5rem;
-      font-weight: 600;
-    }
-  }
+  position: relative;
 
   .dashboard-content {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    height: 100%;
     overflow: hidden;
   }
 
+  // イベント一覧セクション（上部2/3）
   .events-section {
-    flex: 2;
+    height: 66.67vh; // 2/3 of viewport height
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 1rem;
-    background-color: #ffffff;
+    background-color: #f0f4f8;
 
-    .events-grid {
+    h2 {
+      margin: 0 0 1rem 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #2d3748;
+      text-align: center;
+      padding: 0.5rem;
+    }
+
+    .events-list {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
-      max-width: 100%;
+      padding: 0;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    // イベントなしの場合のメッセージ
+    p {
+      text-align: center;
+      color: #718096;
+      font-size: 0.9rem;
+      margin: 2rem 0;
     }
   }
 
+  // 地図セクション（下部1/3）
   .map-section {
-    flex: 1;
-    min-height: 200px;
-    border-top: 2px solid #e9ecef;
+    height: 33.33vh; // 1/3 of viewport height
+    overflow: hidden;
     position: relative;
+    border-top: 1px solid #e2e8f0;
+
+    #map-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    // 動的ピン表示用コンテナ
+    .map-pin-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    // 地図上のピンスタイル
+    .map-pin {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: #e53e3e;
+      border: 2px solid white;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      z-index: 50;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+      &::after {
+        content: '';
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        background: white;
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+    }
   }
 }
 
-// タブレット以上の画面サイズ
-@media (min-width: 768px) {
-  .dashboard {
-    .dashboard-header {
-      h1 {
-        font-size: 2rem;
-      }
+// EventCardのスタイル調整（レスポンシブ対応）
+.event-card {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  position: relative;
+  min-height: 200px;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
+
+  // カード内の画像
+  .event-image {
+    height: 120px;
+    width: 100%;
+    object-fit: cover;
+    border-radius: 1rem 1rem 0 0;
+  }
+
+  // カード内容
+  .event-content {
+    padding: 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  // イベント名
+  .event-title {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  // イベント詳細（日付・場所）
+  .event-details {
+    font-size: 0.875rem;
+    color: #718096;
+    line-height: 1.4;
+  }
+
+  // ステータスバッジ
+  .event-status {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background-color: #667eea;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-weight: bold;
+    z-index: 5;
+  }
+
+  // 選択状態のスタイル
+  &.selected {
+    border: 2px solid #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+}
+
+// レスポンシブ対応
+@media (max-width: 480px) {
+  .dashboard .events-section {
+    padding: 0.5rem;
+    
+    .events-list {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
     }
+  }
 
-    .events-section {
-      padding: 1.5rem;
-
-      .events-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.5rem;
-      }
+  .event-card {
+    min-height: 160px;
+    
+    .event-image {
+      height: 80px;
     }
-
-    .map-section {
-      min-height: 300px;
+    
+    .event-content {
+      padding: 0.5rem;
+    }
+    
+    .event-title {
+      font-size: 0.8rem;
+    }
+    
+    .event-details {
+      font-size: 0.7rem;
     }
   }
 }
 
-// デスクトップ画面サイズ
-@media (min-width: 1024px) {
-  .dashboard {
-    .events-section {
-      padding: 2rem;
-
-      .events-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 2rem;
-      }
+@media (min-width: 481px) and (max-width: 768px) {
+  .dashboard .events-section {
+    padding: 0.75rem;
+    
+    .events-list {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
     }
+  }
 
-    .map-section {
-      min-height: 400px;
+  .event-card {
+    min-height: 180px;
+    
+    .event-image {
+      height: 100px;
     }
+    
+    .event-content {
+      padding: 0.75rem;
+    }
+    
+    .event-title {
+      font-size: 0.9rem;
+    }
+    
+    .event-details {
+      font-size: 0.8rem;
+    }
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .dashboard .events-section .events-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1025px) {
+  .dashboard .events-section .events-list {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
