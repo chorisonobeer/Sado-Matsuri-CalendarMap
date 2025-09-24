@@ -61,6 +61,25 @@
   .modal-content {
     overflow-y: auto;
     max-height: calc(90vh - 80px);
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f7fafc;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: #a0aec0;
+    }
 
     .event-image {
       width: 100%;

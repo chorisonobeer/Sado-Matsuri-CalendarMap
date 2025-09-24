@@ -127,11 +127,19 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }) => {
               <h3>詳細情報</h3>
               <div className="detail-item">
                 <span className="label">料金:</span>
-                <span className="value">{event.無料か有料か || '情報なし'}</span>
+                <span className="value">
+                  {event.無料か有料か === 'TRUE' ? '無料' : 
+                   event.無料か有料か === 'FALSE' ? '有料' : 
+                   event.無料か有料か || '情報なし'}
+                </span>
               </div>
               <div className="detail-item">
                 <span className="label">駐車場:</span>
-                <span className="value">{event.駐車場の有無 || '情報なし'}</span>
+                <span className="value">
+                  {event.駐車場の有無 === 'TRUE' ? '有り' : 
+                   event.駐車場の有無 === 'FALSE' ? '無し' : 
+                   event.駐車場の有無 || '情報なし'}
+                </span>
               </div>
               <div className="detail-item">
                 <span className="label">カテゴリ:</span>

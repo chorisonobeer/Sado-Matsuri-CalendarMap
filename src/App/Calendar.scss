@@ -1,41 +1,56 @@
 .calendar-view {
   width: 100% !important;
-  height: calc(100vh - 50px) !important; /* フッターの高さを考慮 */
+  height: calc(100vh - 60px) !important;
   display: flex !important;
   flex-direction: column !important;
-  background-color: #f8f9fa !important;
+  background-color: #ffffff !important;
   position: relative !important;
-  z-index: 10 !important; /* 地図より高く設定 */
+  z-index: 10 !important;
   overflow: hidden !important;
   visibility: visible !important;
   opacity: 1 !important;
-  padding: 16px;
+  padding: 20px;
   max-width: none;
   margin: 0;
-  font-family: sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   box-sizing: border-box;
 
   .calendar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    padding: 0 8px;
 
     h2 {
       margin: 0;
-      font-size: 1.5em;
+      font-size: 1.75rem;
+      font-weight: 400;
+      color: #3c4043;
+      letter-spacing: 0;
     }
 
     button {
       background: none;
-      border: 1px solid #ccc;
-      padding: 8px 12px;
+      border: none;
+      padding: 12px;
       cursor: pointer;
-      border-radius: 4px;
-      font-size: 1em;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      color: #5f6368;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s ease;
 
       &:hover {
-        background-color: #f0f0f0;
+        background-color: #f1f3f4;
+      }
+
+      &:active {
+        background-color: #e8eaed;
       }
     }
   }
@@ -43,82 +58,185 @@
   .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
-    border: 1px solid #eee;
+    grid-template-rows: auto repeat(6, 1fr);
+    border: 1px solid #dadce0;
     border-radius: 8px;
     overflow: hidden;
     flex: 1;
     min-height: 0;
+    background: #ffffff;
 
     .calendar-weekday {
-      background-color: #f8f8f8;
-      padding: 10px 5px;
+      background-color: #ffffff;
+      padding: 16px 8px;
       text-align: center;
-      font-weight: bold;
-      font-size: 0.9em;
-      border-bottom: 1px solid #eee;
+      font-weight: 500;
+      font-size: 0.875rem;
+      color: #5f6368;
+      border-bottom: 1px solid #dadce0;
+      border-right: 1px solid #dadce0;
+      letter-spacing: 0.25px;
+
+      &:last-child {
+        border-right: none;
+      }
     }
 
     .calendar-day {
-      min-height: 100px;
-      padding: 5px;
-      border-right: 1px solid #eee;
-      border-bottom: 1px solid #eee;
-      background-color: #fff;
+      height: 120px; // 固定高さ
+      padding: 8px;
+      border-right: 1px solid #dadce0;
+      border-bottom: 1px solid #dadce0;
+      background-color: #ffffff;
       cursor: pointer;
       position: relative;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
+      overflow: hidden;
+      transition: background-color 0.1s ease;
 
       &:nth-child(7n) {
-        border-right: none; // 土曜日の右線はなし
+        border-right: none;
       }
+
       &:nth-last-child(-n+7) {
-        border-bottom: none; // 最終週の下線はなし
+        border-bottom: none;
       }
 
       &.other-month {
-        background-color: #f5f5f5;
-        color: #ccc;
+        background-color: #ffffff;
+        
+        .day-number {
+          color: #dadce0;
+        }
       }
 
       &.today {
-        background-color: #e0f7fa; // 今日の日付の背景色
-        border: 2px solid #00bcd4;
+        .day-number {
+          background-color: #1a73e8;
+          color: #ffffff;
+          border-radius: 50%;
+          width: 28px;
+          height: 28px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 500;
+        }
       }
 
       &:hover {
-        background-color: #e9e9e9;
+        background-color: #f8f9fa;
       }
 
       .day-number {
-        font-weight: bold;
-        font-size: 1.1em;
-        margin-bottom: 5px;
+        font-weight: 400;
+        font-size: 0.875rem;
+        margin-bottom: 4px;
+        color: #3c4043;
+        min-height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        width: 28px;
       }
 
       .day-events {
-        font-size: 0.8em;
+        font-size: 0.75rem;
         width: 100%;
+        flex: 1;
+        overflow: hidden;
 
         .event-title {
-          background-color: #007bff;
-          color: #fff;
-          padding: 2px 5px;
-          border-radius: 3px;
+          background-color: #1a73e8;
+          color: #ffffff;
+          padding: 2px 6px;
+          border-radius: 4px;
           margin-bottom: 2px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          font-weight: 400;
+          line-height: 1.2;
+          cursor: pointer;
+          transition: background-color 0.1s ease;
+
+          &:hover {
+            background-color: #1557b0;
+          }
         }
 
         .more-events {
-          background-color: #ccc;
-          color: #333;
-          padding: 2px 5px;
-          border-radius: 3px;
-          text-align: center;
+          background-color: transparent;
+          color: #5f6368;
+          padding: 2px 6px;
+          font-size: 0.6875rem;
+          text-align: left;
+          font-weight: 400;
+          cursor: pointer;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+    }
+  }
+}
+
+// レスポンシブ対応
+@media (max-width: 768px) {
+  .calendar-view {
+    padding: 12px;
+
+    .calendar-header {
+      margin-bottom: 16px;
+
+      h2 {
+        font-size: 1.5rem;
+      }
+
+      button {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+      }
+    }
+
+    .calendar-grid {
+      .calendar-weekday {
+        padding: 12px 4px;
+        font-size: 0.75rem;
+      }
+
+      .calendar-day {
+        height: 80px;
+        padding: 4px;
+
+        .day-number {
+          font-size: 0.75rem;
+          min-height: 24px;
+          width: 24px;
+
+          &.today {
+            width: 24px;
+            height: 24px;
+          }
+        }
+
+        .day-events {
+          font-size: 0.625rem;
+
+          .event-title {
+            padding: 1px 4px;
+            margin-bottom: 1px;
+          }
+
+          .more-events {
+            font-size: 0.625rem;
+            padding: 1px 4px;
+          }
         }
       }
     }
