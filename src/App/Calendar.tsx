@@ -12,8 +12,8 @@ const Calendar: React.FC<CalendarProps> = ({ data }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // 月の最初の日と最後の日を取得
-  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-  const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+  const firstDayOfMonth = useMemo(() => new Date(currentDate.getFullYear(), currentDate.getMonth(), 1), [currentDate]);
+  const lastDayOfMonth = useMemo(() => new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0), [currentDate]);
 
   // カレンダーのグリッドを生成
   const calendarDays = useMemo(() => {
