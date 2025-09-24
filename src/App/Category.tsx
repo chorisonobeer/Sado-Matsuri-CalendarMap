@@ -4,7 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import './Category.scss'
 
 type Props = {
-  data: Pwamap.ShopData[];
+  data: Pwamap.FestivalData[];
+}
+
+type OptionType = {
+  value: string;
+  label: string;
 }
 
 const Content = (props: Props) => {
@@ -47,8 +52,8 @@ const Content = (props: Props) => {
         <div className="container">
           <div className="category-item">
             <label htmlFor="category-select">カテゴリから選ぶ</label>
-            <Select
-              onChange={(e) => {
+            <Select<OptionType>
+              onChange={(e: OptionType | null) => {
                 if (e) {
                   navigate(`/list?category=${e.value}`);
                 }

@@ -1,4 +1,3 @@
-import React from "react";
 import './About.scss'
 import Qrcode from './Qrcode'
 import Share from './App/Share'

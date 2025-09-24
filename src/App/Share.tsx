@@ -1,4 +1,3 @@
-import React from "react";
 import { FacebookShareButton, LineShareButton, TwitterShareButton } from "react-share";
 import { FacebookIcon, LineIcon, TwitterIcon } from "react-share";
 import config from '../config.json'

@@ -1,38 +1,57 @@
-interface Window {
-  geolonia: any;
+declare global {
+  interface Window {
+    geolonia?: any;
+  }
 }
 
 declare namespace Pwamap {
-  type ShopData = {
+  interface ShopData {
     index: number;
     [key: string]: any;
   }
 
-  // イベント情報の型定義
-  type EventData = {
+  interface EventData {
     index: number;
-    タイムスタンプ?: string;
     イベント名: string;
     開催期間: string;
-    開始時間: string;
-    終了時間: string;
-    場所: string;
-    説明文: string;
-    画像URL1?: string;
-    画像URL2?: string;
-    画像URL3?: string;
-    画像URL4?: string;
-    画像URL5?: string;
-    画像URL6?: string;
-    主催者名: string;
-    タグ?: string;
-    非公開?: string;
-    緯度?: string;
-    経度?: string;
-    公式サイト?: string;
-    Instagram?: string;
-    Facebook?: string;
-    Twitter?: string;
-    X?: string;
+    開催場所: string;
+    緯度: number;
+    経度: number;
+    詳細: string;
+    写真: string;
+    公式サイト: string;
+    [key: string]: any;
+  }
+
+  // 佐渡祭りカレンダー用の新しい型定義
+  interface FestivalData {
+    index: number;
+    ID: string;
+    お祭り名: string;
+    開催場所名: string;
+    緯度: string;  // MapPointBaseとの互換性のため文字列型に変更
+    経度: string;  // MapPointBaseとの互換性のため文字列型に変更
+    開始日: string;
+    終了日: string;
+    無料か有料か: string;
+    駐車場の有無: string;
+    上位カテゴリ: string;
+    規模感: string;
+    開催ステータス: string;
+    写真URL1: string;
+    写真URL2: string;
+    写真URL3: string;
+    写真URL4: string;
+    写真URL5: string;
+    公式サイトURL: string;
+    詳細タグ1: string;
+    詳細タグ2: string;
+    詳細タグ3: string;
+    詳細タグ4: string;
+    詳細タグ5: string;
+    詳細タグ6: string;
+    詳細タグ7: string;
+    詳細タグ8: string;
+    [key: string]: any;
   }
 }

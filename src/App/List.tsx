@@ -6,7 +6,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { askGeolocationPermission } from '../geolocation';
 import * as turf from "@turf/turf";
-import { useSwipeable } from "react-swipeable";
+import { useSwipeable, SwipeEventData } from "react-swipeable";
 import { GeolocationContext } from '../context/GeolocationContext';
 
 // スケルトンローディングコンポーネント
@@ -21,10 +21,10 @@ const SkeletonItem = React.memo(() => (
 ));
 
 type Props = {
-  data: Pwamap.ShopData[];
+  data: Pwamap.FestivalData[];
 };
 
-type ShopDataWithDistance = Pwamap.ShopData & { distance?: number };
+type ShopDataWithDistance = Pwamap.FestivalData & { distance?: number };
 
 // キャッシュ設定
 const CACHE_DURATION = 60 * 60 * 1000; // 1時間に延長
@@ -35,7 +35,7 @@ const LOAD_MORE_SIZE = 10; // 追加読み込み件数
 // 位置情報と距離計算のキャッシュ
 let positionCache: { coords: { latitude: number; longitude: number }; timestamp: number } | null = null;
 const distanceCache = new Map<string, number>();
-const dataCache = new Map<string, Pwamap.ShopData[]>();
+const dataCache = new Map<string, Pwamap.FestivalData[]>();
 
 // キャッシュユーティリティ
 const getCachedDistance = (shopId: string, position: number[]) => {
@@ -49,7 +49,7 @@ const setCachedDistance = (shopId: string, position: number[], distance: number)
 };
 
 // バッチ処理による距離計算（Web Workerを使用）
-const calculateDistancesInBatches = async (shops: Pwamap.ShopData[], position: number[]) => {
+const calculateDistancesInBatches = async (shops: Pwamap.FestivalData[], position: number[]) => {
   const from = turf.point(position);
   const results: ShopDataWithDistance[] = [];
   
@@ -90,7 +90,7 @@ const calculateDistancesInBatches = async (shops: Pwamap.ShopData[], position: n
   return [...cachedShops.filter(shop => typeof shop.distance === 'number'), ...results];
 };
 
-const sortShopList = async (shopList: Pwamap.ShopData[], contextLocation?: [number, number] | null): Promise<ShopDataWithDistance[]> => {
+const sortShopList = async (shopList: Pwamap.FestivalData[], contextLocation?: [number, number] | null): Promise<ShopDataWithDistance[]> => {
   const cacheKey = `sorted-${shopList.length}-${contextLocation ? contextLocation.join(',') : 'no-location'}`;
   const cachedData = dataCache.get(cacheKey);
   
@@ -140,9 +140,9 @@ const sortShopList = async (shopList: Pwamap.ShopData[], contextLocation?: [numb
 };
 
 const Content = (props: Props) => {
-  const [shop, setShop] = useState<Pwamap.ShopData | undefined>();
-  const [data, setData] = useState<Pwamap.ShopData[]>(props.data);
-  const [list, setList] = useState<Pwamap.ShopData[]>([]);
+  const [shop, setShop] = useState<Pwamap.FestivalData | undefined>();
+  const [data, setData] = useState<Pwamap.FestivalData[]>(props.data);
+  const [list, setList] = useState<Pwamap.FestivalData[]>([]);
   const [page, setPage] = useState(INITIAL_LOAD_SIZE);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -218,7 +218,7 @@ const Content = (props: Props) => {
     initializeData();
   }, [props.data, queryCategory, location]);
 
-  const popupHandler = useCallback((shop: Pwamap.ShopData) => {
+  const popupHandler = useCallback((shop: Pwamap.FestivalData) => {
     if (shop) {
       setShop(shop);
     }
@@ -245,13 +245,12 @@ const Content = (props: Props) => {
 
   // スワイプハンドラーの設定
   const swipeHandlers = useSwipeable({
-    onSwiped: (eventData) => {
+    onSwiped: (eventData: SwipeEventData) => {
       if (Math.abs(eventData.deltaX) > Math.abs(eventData.deltaY) && Math.abs(eventData.deltaX) > 50) {
         navigate(-1);
       }
     },
-    trackMouse: false,
-    preventScrollOnSwipe: false,
+    trackMouse: true
   });
 
   // skeletonLoader をメモ化

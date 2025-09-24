@@ -5,8 +5,9 @@ Last Modified: 2025-02-28 17:45:00
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import Papa from 'papaparse';
+import { parseCsvByHeader, stripWrappingQuotes } from './lib/csv';
 import { GeolocationProvider } from './context/GeolocationContext';
+import Dashboard from './App/Dashboard';
 import Home from './App/Home';
 import List from './App/List';
 import Category from './App/Category';
@@ -19,14 +20,14 @@ import config from "./config.json";
 import './App.scss';
 
 const App: React.FC = React.memo(() => {
-  const [shopList, setShopList] = useState<Pwamap.ShopData[]>([]);
+  const [shopList, setShopList] = useState<Pwamap.FestivalData[]>([]);
   const [error, setError] = useState<string>("");
-  const [selectedShop, setSelectedShop] = useState<Pwamap.ShopData | undefined>(undefined);
-  const [filteredShops, setFilteredShops] = useState<Pwamap.ShopData[]>([]);
+  const [selectedShop, setSelectedShop] = useState<Pwamap.FestivalData | undefined>(undefined);
+  const [filteredShops, setFilteredShops] = useState<Pwamap.FestivalData[]>([]);
   const location = useLocation();
 
-  const sortShopList = useCallback((shopList: Pwamap.ShopData[]) => {
-    return new Promise<Pwamap.ShopData[]>((resolve) => {
+  const sortShopList = useCallback((shopList: Pwamap.FestivalData[]) => {
+    return new Promise<Pwamap.FestivalData[]>((resolve) => {
       const sortedList = shopList.sort((item1, item2) => {
         return Date.parse(item2['タイムスタンプ']) - Date.parse(item1['タイムスタンプ']);
       });
@@ -49,34 +50,39 @@ const App: React.FC = React.memo(() => {
             return response.text();
           })
           .then((data) => {
-            Papa.parse(data, {
-              header: true,
-              complete: (results) => {
-                const features = results.data;
-                const nextShopList: Pwamap.ShopData[] = [];
-                for (let i = 0; i < features.length; i++) {
-                  const feature = features[i] as Pwamap.ShopData;
-                  if (!feature['緯度'] || !feature['経度'] || !feature['スポット名']) continue;
-                  if (!feature['緯度'].match(/^[0-9]+(\.[0-9]+)?$/)) continue;
-                  if (!feature['経度'].match(/^[0-9]+(\.[0-9]+)?$/)) continue;
-                  const shop = { index: i, ...feature };
-                  nextShopList.push(shop);
-                }
-                sortShopList(nextShopList).then((sortedShopList) => {
-                  if (JSON.stringify(parsed) !== JSON.stringify(sortedShopList)) {
-                    setShopList(sortedShopList);
-                    sessionStorage.setItem(cacheKey, JSON.stringify(sortedShopList));
-                  }
+            const features = parseCsvByHeader<Pwamap.FestivalData>(data, {
+              requiredFields: ['緯度', '経度', 'お祭り名'],
+              transform: (record, i) => {
+                const feature = { ...(record as any) } as Pwamap.FestivalData;
+                // 緯度経度の数値形式チェック（負の値も許可）
+                if (!feature['緯度'] || !feature['経度']) return null;
+                if (!feature['緯度'].toString().match(/^-?[0-9]+(\.[0-9]+)?$/)) return null;
+                if (!feature['経度'].toString().match(/^-?[0-9]+(\.[0-9]+)?$/)) return null;
+                // 文字列フィールドのクリーニング
+                const stringFields = ['お祭り名', '開催場所名', '上位カテゴリ', '規模感', '開催ステータス'];
+                stringFields.forEach((field) => {
+                  const v = (feature as any)[field];
+                  if (typeof v === 'string') (feature as any)[field] = v.trim();
                 });
-              },
-              error: () => {
-                setError("CSVパースエラー");
+                // URL フィールドのクリーニング
+                const urlFields = ['写真URL', '公式サイトURL'];
+                urlFields.forEach((field) => {
+                  const v = (feature as any)[field];
+                  if (typeof v === 'string') (feature as any)[field] = stripWrappingQuotes(v.trim());
+                });
+                return { ...feature, index: i } as Pwamap.FestivalData;
+              }
+            });
+            sortShopList(features).then((sortedShopList) => {
+              if (JSON.stringify(parsed) !== JSON.stringify(sortedShopList)) {
+                setShopList(sortedShopList);
+                sessionStorage.setItem(cacheKey, JSON.stringify(sortedShopList));
               }
             });
           })
-          .catch((e) => {
-            setError(e.message);
-          });
+           .catch((e) => {
+             setError(e.message);
+           });
         return;
       } catch (e) {
         // パース失敗時は通常フロー
@@ -89,27 +95,29 @@ const App: React.FC = React.memo(() => {
         return response.text();
       })
       .then((data) => {
-        Papa.parse(data, {
-          header: true,
-          complete: (results) => {
-            const features = results.data;
-            const nextShopList: Pwamap.ShopData[] = [];
-            for (let i = 0; i < features.length; i++) {
-              const feature = features[i] as Pwamap.ShopData;
-              if (!feature['緯度'] || !feature['経度'] || !feature['スポット名']) continue;
-              if (!feature['緯度'].match(/^[0-9]+(\.[0-9]+)?$/)) continue;
-              if (!feature['経度'].match(/^[0-9]+(\.[0-9]+)?$/)) continue;
-              const shop = { index: i, ...feature };
-              nextShopList.push(shop);
-            }
-            sortShopList(nextShopList).then((sortedShopList) => {
-              setShopList(sortedShopList);
-              sessionStorage.setItem(cacheKey, JSON.stringify(sortedShopList));
+        const features = parseCsvByHeader<Pwamap.FestivalData>(data, {
+          requiredFields: ['緯度', '経度', 'お祭り名'],
+          transform: (record, i) => {
+            const feature = { ...(record as any) } as Pwamap.FestivalData;
+            if (!feature['緯度'] || !feature['経度']) return null;
+            if (!feature['緯度'].toString().match(/^-?[0-9]+(\.[0-9]+)?$/)) return null;
+            if (!feature['経度'].toString().match(/^-?[0-9]+(\.[0-9]+)?$/)) return null;
+            const stringFields = ['お祭り名', '開催場所名', '上位カテゴリ', '規模感', '開催ステータス'];
+            stringFields.forEach((field) => {
+              const v = (feature as any)[field];
+              if (typeof v === 'string') (feature as any)[field] = v.trim();
             });
-          },
-          error: () => {
-            setError("CSVパースエラー");
+            const urlFields = ['写真URL', '公式サイトURL'];
+            urlFields.forEach((field) => {
+              const v = (feature as any)[field];
+              if (typeof v === 'string') (feature as any)[field] = stripWrappingQuotes(v.trim());
+            });
+            return { ...feature, index: i } as Pwamap.FestivalData;
           }
+        });
+        sortShopList(features).then((sortedShopList) => {
+          setShopList(sortedShopList);
+          sessionStorage.setItem(cacheKey, JSON.stringify(sortedShopList));
         });
       })
       .catch((e) => {
@@ -118,12 +126,11 @@ const App: React.FC = React.memo(() => {
   }, [sortShopList]);
 
   // 店舗選択ハンドラ
-  const handleSelectShop = useCallback((shop: Pwamap.ShopData) => {
+  const handleSelectShop = useCallback((shop: Pwamap.FestivalData) => {
     setSelectedShop(shop);
   }, []);
 
-  // 検索結果を受け取るハンドラ
-  const handleSearchResults = useCallback((results: Pwamap.ShopData[]) => {
+  const handleSearchResults = useCallback((results: Pwamap.FestivalData[]) => {
     setFilteredShops(results);
   }, []);
 
@@ -136,22 +143,21 @@ const App: React.FC = React.memo(() => {
 
   // 永続化されたMapコンポーネント
   const persistentMap = useMemo(() => {
-    const isHomePage = location.pathname === '/';
     return (
-      <LazyMap 
+      <LazyMap
         data={filteredShops} 
         selectedShop={selectedShop}
         onSelectShop={handleSelectShop}
         initialData={shopList}
         style={{ 
-          display: isHomePage ? 'block' : 'none',
+          display: location.pathname === '/' ? 'none' : 'block',
           position: 'absolute',
           top: 0,
           left: 0,
           width: '100%',
           height: 'calc(100% - 50px)',
-          zIndex: isHomePage ? 5 : -1,
-          pointerEvents: isHomePage ? 'auto' : 'none'
+          zIndex: location.pathname === '/' ? -1 : 5,
+          pointerEvents: location.pathname === '/' ? 'none' : 'auto'
         }}
       />
     );
@@ -161,6 +167,14 @@ const App: React.FC = React.memo(() => {
   const routes = useMemo(() => (
     <Routes>
       <Route path="/" element={
+        <Dashboard 
+          data={shopList} 
+          selectedShop={selectedShop}
+          onSelectShop={handleSelectShop}
+          onSearchResults={handleSearchResults}
+        />
+      } />
+      <Route path="/home" element={
         <Home 
           data={shopList} 
           selectedShop={selectedShop}

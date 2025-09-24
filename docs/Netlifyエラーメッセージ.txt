@@ -1,0 +1,238 @@
+Compiled with problems:
+×
+ERROR in src/About.tsx
+TS6133: 'React' is declared but its value is never read.
+ERROR in src/App.tsx:146:11
+TS6133: 'isDashboardPage' is declared but its value is never read.
+    144 |   // 永続化されたMapコンポーネント
+    145 |   const persistentMap = useMemo(() => {
+  > 146 |     const isDashboardPage = location.pathname === '/';
+        |           ^^^^^^^^^^^^^^^
+    147 |     return (
+    148 |       <LazyMap<Pwamap.FestivalData, Pwamap.FestivalData | undefined>
+    149 |         data={filteredShops} 
+ERROR in src/App.tsx:148:16
+TS2558: Expected 0-1 type arguments, but got 2.
+    146 |     const isDashboardPage = location.pathname === '/';
+    147 |     return (
+  > 148 |       <LazyMap<Pwamap.FestivalData, Pwamap.FestivalData | undefined>
+        |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    149 |         data={filteredShops} 
+    150 |         selectedShop={selectedShop}
+    151 |         onSelectShop={handleSelectShop}
+ERROR in src/App.tsx:171:10
+TS2375: Type '{ data: FestivalData[]; selectedShop: FestivalData | undefined; onSelectShop: (shop: FestivalData) => void; onSearchResults: (results: FestivalData[]) => void; }' is not assignable to type 'DashboardProps' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'selectedShop' are incompatible.
+    Type 'FestivalData | undefined' is not assignable to type 'FestivalData'.
+      Type 'undefined' is not assignable to type 'FestivalData'.
+    169 |     <Routes>
+    170 |       <Route path="/" element={
+  > 171 |         <Dashboard 
+        |          ^^^^^^^^^
+    172 |           data={shopList} 
+    173 |           selectedShop={selectedShop}
+    174 |           onSelectShop={handleSelectShop}
+ERROR in src/App.tsx:179:10
+TS2375: Type '{ data: FestivalData[]; selectedShop: FestivalData | undefined; onSelectShop: (shop: FestivalData) => void; onSearchResults: (results: FestivalData[]) => void; }' is not assignable to type 'Props' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'selectedShop' are incompatible.
+    Type 'FestivalData | undefined' is not assignable to type 'FestivalData'.
+      Type 'undefined' is not assignable to type 'FestivalData'.
+    177 |       } />
+    178 |       <Route path="/home" element={
+  > 179 |         <Home 
+        |          ^^^^
+    180 |           data={shopList} 
+    181 |           selectedShop={selectedShop}
+    182 |           onSelectShop={handleSelectShop}
+ERROR in src/App/AboutUs.tsx:6:8
+TS6133: 'React' is declared but its value is never read.
+    4 |  * 変更概要: 新潟クラフトビールマップ向けに全面リライト - UIデザイン改善
+    5 |  */
+  > 6 | import React, { useEffect, useState } from 'react';
+      |        ^^^^^
+    7 | import './AboutUs.scss';
+    8 | import config from '../config.json';
+    9 | import { FaPlus, FaBeer, FaMapMarkedAlt, FaSearch, FaCamera, FaInfoCircle } from 'react-icons/fa';
+ERROR in src/App/Category.tsx:26:16
+TS7006: Parameter 'cat' implicitly has an 'any' type.
+    24 |         const shopCategories = shop['カテゴリ']
+    25 |           .split(/,|、|\s+/)
+  > 26 |           .map(cat => cat.trim())
+       |                ^^^
+    27 |           .filter(cat => cat !== '');
+    28 |         
+    29 |         for (const category of shopCategories) {
+ERROR in src/App/Category.tsx:27:19
+TS7006: Parameter 'cat' implicitly has an 'any' type.
+    25 |           .split(/,|、|\s+/)
+    26 |           .map(cat => cat.trim())
+  > 27 |           .filter(cat => cat !== '');
+       |                   ^^^
+    28 |         
+    29 |         for (const category of shopCategories) {
+    30 |           if (categories.indexOf(category) === -1) {
+ERROR in src/App/Dashboard.tsx:24:3
+TS6133: 'onSearchResults' is declared but its value is never read.
+    22 |   selectedShop,
+    23 |   onSelectShop,
+  > 24 |   onSearchResults
+       |   ^^^^^^^^^^^^^^^
+    25 | }) => {
+    26 |   const [selectedEvent, setSelectedEvent] = useState<Pwamap.FestivalData | null>(null);
+    27 |
+ERROR in src/App/Events.tsx:112:35
+TS2783: 'index' is specified more than once, so this usage will be overwritten.
+    110 |                     }
+    111 |                   });
+  > 112 |                   const event = { index: i, ...feature };
+        |                                   ^^^^^^^^
+    113 |                   nextEventList.push(event);
+    114 |                 }
+    115 |                 // 差分があればキャッシュ・state更新
+ERROR in src/App/Events.tsx:171:22
+TS2783: 'index' is specified more than once, so this usage will be overwritten.
+    169 |               if (typeof v === 'string') (feature as any)[key] = stripWrappingQuotes(v);
+    170 |             });
+  > 171 |             return { index: i, ...feature } as EventData;
+        |                      ^^^^^^^^
+    172 |           }
+    173 |         });
+    174 |         setEventList(features);
+ERROR in src/App/LazyMap.tsx:32:10
+TS2375: Type '{ data: T[]; selectedShop?: T; onSelectShop: (shop: T) => void; initialData?: T[]; isEventMode?: boolean; }' is not assignable to type 'MapProps<MapPointBase>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'onSelectShop' are incompatible.
+    Type '(shop: T) => void' is not assignable to type '(shop: MapPointBase) => void'.
+      Types of parameters 'shop' and 'shop' are incompatible.
+        Type 'MapPointBase' is not assignable to type 'T'.
+          'MapPointBase' is assignable to the constraint of type 'T', but 'T' could be instantiated with a different subtype of constraint 'MapPointBase'.
+    30 |     <div style={style}>
+    31 |       <Suspense fallback={<MapSkeleton />}>
+  > 32 |         <Map {...mapProps} />
+       |          ^^^
+    33 |       </Suspense>
+    34 |     </div>
+    35 |   );
+ERROR in src/App/List.tsx:187:51
+TS7006: Parameter 'cat' implicitly has an 'any' type.
+    185 |           filteredData = props.data.filter((shop) => {
+    186 |             const shopCategories = shop['カテゴリ']
+  > 187 |               ? shop['カテゴリ'].split(/,|、|\s+/).map(cat => cat.trim())
+        |                                                   ^^^
+    188 |               : [];
+    189 |             return shopCategories.includes(queryCategory);
+    190 |           });
+ERROR in src/App/MapView.tsx:17:44
+TS6133: 'events' is declared but its value is never read.
+    15 | }
+    16 |
+  > 17 | const MapView: React.FC<MapViewProps> = ({ events, selectedEvent, onEventSelect, onMarkerUpdate }) => {
+       |                                            ^^^^^^
+    18 |   const mapRef = useRef<HTMLDivElement>(null);
+    19 |   const mapInstanceRef = useRef<google.maps.Map | null>(null);
+    20 |   const currentMarkerRef = useRef<google.maps.Marker | null>(null);
+ERROR in src/App/MapView.tsx:17:67
+TS6133: 'onEventSelect' is declared but its value is never read.
+    15 | }
+    16 |
+  > 17 | const MapView: React.FC<MapViewProps> = ({ events, selectedEvent, onEventSelect, onMarkerUpdate }) => {
+       |                                                                   ^^^^^^^^^^^^^
+    18 |   const mapRef = useRef<HTMLDivElement>(null);
+    19 |   const mapInstanceRef = useRef<google.maps.Map | null>(null);
+    20 |   const currentMarkerRef = useRef<google.maps.Marker | null>(null);
+ERROR in src/App/SearchFeature.tsx:134:27
+TS7006: Parameter 'day' implicitly has an 'any' type.
+    132 |         .map((day: string) => day.trim())
+    133 |         .filter((day: string) => day !== '');
+  > 134 |       if (closedDays.some(day => day.includes(dayOfWeek))) {
+        |                           ^^^
+    135 |         return false;
+    136 |       }
+    137 |     }
+ERROR in src/App/Share.tsx
+TS6133: 'FC' is declared but its value is never read.
+ERROR in src/App/Shop.tsx:86:47
+TS7006: Parameter 'cat' implicitly has an 'any' type.
+    84 |   // カテゴリの分割処理
+    85 |   const categories = props.shop["カテゴリ"] 
+  > 86 |     ? props.shop["カテゴリ"].split(/,|、|\s+/).map(cat => cat.trim()).filter(cat => cat !== '')
+       |                                               ^^^
+    87 |     : [];
+    88 |   
+    89 |   const content = props.shop["紹介文"] || "";
+ERROR in src/App/Shop.tsx:86:73
+TS7006: Parameter 'cat' implicitly has an 'any' type.
+    84 |   // カテゴリの分割処理
+    85 |   const categories = props.shop["カテゴリ"] 
+  > 86 |     ? props.shop["カテゴリ"].split(/,|、|\s+/).map(cat => cat.trim()).filter(cat => cat !== '')
+       |                                                                         ^^^
+    87 |     : [];
+    88 |   
+    89 |   const content = props.shop["紹介文"] || "";
+ERROR in src/App/Shop.tsx:138:28
+TS7006: Parameter 'category' implicitly has an 'any' type.
+    136 |
+    137 |         <div className="tag-box">
+  > 138 |           {categories.map((category, index) => (
+        |                            ^^^^^^^^
+    139 |             <Link key={`cat-${index}`} to={`/list?category=${category}`}>
+    140 |               <span className="category">{category}</span>
+    141 |             </Link>
+ERROR in src/App/Shop.tsx:138:38
+TS7006: Parameter 'index' implicitly has an 'any' type.
+    136 |
+    137 |         <div className="tag-box">
+  > 138 |           {categories.map((category, index) => (
+        |                                      ^^^^^
+    139 |             <Link key={`cat-${index}`} to={`/list?category=${category}`}>
+    140 |               <span className="category">{category}</span>
+    141 |             </Link>
+ERROR in src/App/ShopListItem.tsx:23:47
+TS7006: Parameter 'cat' implicitly has an 'any' type.
+    21 |   // カテゴリの分割処理
+    22 |   const categories = props.data['カテゴリ'] 
+  > 23 |     ? props.data['カテゴリ'].split(/,|、|\s+/).map(cat => cat.trim()).filter(cat => cat !== '')
+       |                                               ^^^
+    24 |     : [];
+    25 |   
+    26 |   const image = props.data['画像'];
+ERROR in src/App/ShopListItem.tsx:23:73
+TS7006: Parameter 'cat' implicitly has an 'any' type.
+    21 |   // カテゴリの分割処理
+    22 |   const categories = props.data['カテゴリ'] 
+  > 23 |     ? props.data['カテゴリ'].split(/,|、|\s+/).map(cat => cat.trim()).filter(cat => cat !== '')
+       |                                                                         ^^^
+    24 |     : [];
+    25 |   
+    26 |   const image = props.data['画像'];
+ERROR in src/App/ShopListItem.tsx:39:46
+TS7006: Parameter 'category' implicitly has an 'any' type.
+    37 |       <div className='tag-box'>
+    38 |         {
+  > 39 |           !isCategoryPage && categories.map((category, index) => (
+       |                                              ^^^^^^^^
+    40 |             <span className="nowrap" key={`cat-${index}`}>
+    41 |               <Link to={`/list?category=${category}`}>
+    42 |                 <span className="category">{category}</span>
+ERROR in src/App/ShopListItem.tsx:39:56
+TS7006: Parameter 'index' implicitly has an 'any' type.
+    37 |       <div className='tag-box'>
+    38 |         {
+  > 39 |           !isCategoryPage && categories.map((category, index) => (
+       |                                                        ^^^^^
+    40 |             <span className="nowrap" key={`cat-${index}`}>
+    41 |               <Link to={`/list?category=${category}`}>
+    42 |                 <span className="category">{category}</span>
+ERROR in src/Container.tsx
+TS6133: 'FC' is declared but its value is never read.
+ERROR in src/service-worker.ts:67:7
+TS2375: Type 'ExpirationPlugin' is not assignable to type 'WorkboxPlugin' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'cacheDidUpdate' are incompatible.
+    Type 'CacheDidUpdateCallback | undefined' is not assignable to type 'CacheDidUpdateCallback'.
+      Type 'undefined' is not assignable to type 'CacheDidUpdateCallback'.
+    65 |       // Ensure that once this runtime cache reaches a maximum size the
+    66 |       // least-recently used images are removed.
+  > 67 |       new ExpirationPlugin({ maxEntries: 50 }),
+       |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    68 |     ],
+    69 |   })
+    70 | );

@@ -3,9 +3,9 @@ import SearchResultItem from './SearchResultItem';
 import './SearchResultsPanel.scss';
 
 type SearchResultsPanelProps = {
-  results: Pwamap.ShopData[];
+  results: Pwamap.FestivalData[];
   visible: boolean;
-  onSelectShop: (shop: Pwamap.ShopData) => void;
+  onSelectShop: (shop: Pwamap.FestivalData) => void;
 };
 
 const SearchResultsPanel: React.FC<SearchResultsPanelProps> = ({ 

@@ -1,23 +1,56 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import './Tabbar.scss'
+/** 
+ * /src/App/Tabbar.tsx
+ * 2025-01-14T15:30+09:00
+ * 変更概要: 要件定義書に沿ったタブ構成に修正（ダッシュボード|地図|リスト|カレンダー|情報）
+ */
 
-import { FaList, FaHome, FaCamera,FaCalendarAlt } from "react-icons/fa"
-import { FaInfoCircle } from "react-icons/fa"
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import './Tabbar.scss';
+import { FiHome, FiMap, FiList, FiCalendar, FiInfo } from 'react-icons/fi';
 
-const Content = () => {
+const Content: React.FC = () => {
+  const location = useLocation();
+
   return (
     <div className="tabbar">
-      <ul>
-        <li><Link to="/"><div className="icon"><FaHome /></div><div className="text">ホーム</div></Link></li>
-        <li><Link to="/list"><div className="icon"><FaList /></div><div className="text">一覧</div></Link></li>
-        <li><Link to="/images"><div className="icon"><FaCamera /></div><div className="text">写真から探す</div></Link></li>
-        <li><Link to="/events"><div className="icon"><FaCalendarAlt /></div><div className="text">イベント</div></Link></li>
-        <li><Link to="/about"><div className="icon"><FaInfoCircle /></div><div className="text">マップについて</div></Link></li>
-      </ul>
+      <Link 
+        to="/" 
+        className={location.pathname === '/' ? 'active' : ''}
+      >
+        <FiHome />
+        <span>ダッシュボード</span>
+      </Link>
+      <Link 
+        to="/map" 
+        className={location.pathname === '/map' ? 'active' : ''}
+      >
+        <FiMap />
+        <span>地図</span>
+      </Link>
+      <Link 
+        to="/list" 
+        className={location.pathname === '/list' ? 'active' : ''}
+      >
+        <FiList />
+        <span>リスト</span>
+      </Link>
+      <Link 
+        to="/calendar" 
+        className={location.pathname === '/calendar' ? 'active' : ''}
+      >
+        <FiCalendar />
+        <span>カレンダー</span>
+      </Link>
+      <Link 
+        to="/info" 
+        className={location.pathname === '/info' ? 'active' : ''}
+      >
+        <FiInfo />
+        <span>情報</span>
+      </Link>
     </div>
   );
-
 };
 
 export default Content;

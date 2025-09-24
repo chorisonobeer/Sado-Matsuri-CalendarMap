@@ -9,14 +9,14 @@ import Shop from './Shop';
 import SearchFeature from './SearchFeature';
 import './Home.scss';
 
-type HomeProps = {
-  data: Pwamap.ShopData[];
-  selectedShop?: Pwamap.ShopData;
-  onSelectShop: (shop: Pwamap.ShopData) => void;
-  onSearchResults: (results: Pwamap.ShopData[]) => void;
+type Props = {
+  data: Pwamap.FestivalData[];
+  selectedShop?: Pwamap.FestivalData;
+  onSelectShop: (shop: Pwamap.FestivalData) => void;
+  onSearchResults: (results: Pwamap.FestivalData[]) => void;
 };
 
-const Home: React.FC<HomeProps> = React.memo((props) => {
+const Home: React.FC<Props> = React.memo((props) => {
   const { data, selectedShop, onSelectShop, onSearchResults } = props;
 
   // 親コンポーネントからのデータを設定（メモ化）

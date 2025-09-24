@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佐渡お祭り案内</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #1a202c;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        .tag-btn.selected {
+            background-color: #4338ca;
+            color: #ffffff;
+        }
+        .view-tab.active {
+            border-bottom: 3px solid #4338ca;
+            color: #4338ca;
+            font-weight: bold;
+        }
+        .modal {
+            display: none;
+        }
+        #google-map {
+            flex-grow: 1;
+            height: 100%;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+<div class="container p-4">
+
+    <!-- Search & Filter Section -->
+    <div class="mb-4">
+        <input type="text" id="search-box" placeholder="キーワードで検索..." class="w-full p-2 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-indigo-500 transition-colors duration-200">
+        <div id="tag-filters" class="flex flex-wrap gap-2 mt-2">
+            <button class="tag-btn bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200" data-tag="すべて">すべて</button>
+            <button class="tag-btn bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200" data-tag="花火">#花火</button>
+            <button class="tag-btn bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200" data-tag="グルメ">#グルメ</button>
+            <button class="tag-btn bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200" data-tag="鬼太鼓">#鬼太鼓</button>
+            <button class="tag-btn bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200" data-tag="伝統芸能">#伝統芸能</button>
+            <button class="tag-btn bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200" data-tag="出店">#出店</button>
+        </div>
+    </div>
+
+    <!-- View Switcher Tabs -->
+    <div class="flex border-b border-gray-300 mb-4">
+        <button id="map-tab" class="view-tab flex-1 py-2 text-center text-gray-600 transition-colors duration-200 active">地図</button>
+        <button id="list-tab" class="view-tab flex-1 py-2 text-center text-gray-600 transition-colors duration-200">リスト</button>
+    </div>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="flex-grow flex flex-col">
+        <!-- Map View -->
+        <div id="map-view" class="view-content flex-grow" style="display: block;">
+            <div id="google-map" class="rounded-xl shadow-lg"></div>
+        </div>
+        <!-- List View -->
+        <div id="list-view" class="view-content flex-grow" style="display: none;">
+            <div id="festival-list" class="flex flex-wrap gap-4 justify-center">
+                <!-- Festival Cards will be dynamically added here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal for Pin Info -->
+    <div id="pin-modal" class="modal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4 z-50">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-sm overflow-hidden">
+            <div class="relative">
+                <img id="modal-image" src="" alt="お祭り画像" class="w-full h-40 object-cover">
+                <button id="close-modal" class="absolute top-2 right-2 bg-white rounded-full p-2 text-gray-700 hover:text-gray-900 transition-colors duration-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <h2 id="modal-title" class="text-xl font-bold mb-1"></h2>
+                <p id="modal-date" class="text-sm text-gray-500 mb-2"></p>
+                <p id="modal-description" class="text-gray-700 text-sm mb-2"></p>
+                <div id="modal-tags" class="flex flex-wrap gap-1"></div>
+                <a id="modal-link" href="#" target="_blank" class="mt-4 block w-full text-center bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700 transition-colors duration-200">詳細を見る</a>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const festivals = [
+        { name: '宿根木まつり', lat: 38.0534, lng: 138.4124, tags: ['鬼太鼓', '伝統芸能'], date: '9/13(土) 18:00〜', description: '狭い路地を練り歩く伝統的な宿根木おけさは圧巻。', url: 'https://www.sado-tourism.com/event/shukunegi/', image: 'https://placehold.co/600x300/e9d5ff/7c3aed?text=鬼太鼓の画像' },
+        { name: '佐渡小木港花火大会', lat: 37.8184, lng: 138.2570, tags: ['花火', '夜景', '屋台'], date: '9/16(火) 19:30〜', description: '港に打ち上げられる花火と海面に映る光の競演は佐渡ならでは。', url: 'https://www.sado-tourism.com/event/ogiminato/', image: 'https://placehold.co/600x300/c7d2fe/4338ca?text=花火大会の画像' },
+        { name: '佐渡民謡まつり', lat: 38.0195, lng: 138.2435, tags: ['伝統芸能', '民謡'], date: '9/18(木) 14:00〜', description: '佐渡を代表する民謡が一同に会する祭典。', url: 'https://www.sado-tourism.com/event/minyo/', image: 'https://placehold.co/600x300/b0a8f9/6d28d9?text=伝統芸能の画像' },
+        { name: '佐渡物産展', lat: 38.0534, lng: 138.4124, tags: ['出店', 'グルメ', '体験'], date: '9/21(日) 10:00〜', description: '佐渡の特産品やグルメが集まるにぎやかな物産展。', url: 'https://www.sado-tourism.com/event/bussanten/', image: 'https://placehold.co/600x300/93c5fd/1d4ed8?text=出店の画像' }
+    ];
+
+    let map;
+    let markers = [];
+    const searchBox = document.getElementById('search-box');
+    const tagButtons = document.querySelectorAll('.tag-btn');
+    const mapTab = document.getElementById('map-tab');
+    const listTab = document.getElementById('list-tab');
+    const mapView = document.getElementById('map-view');
+    const listView = document.getElementById('list-view');
+    const festivalListContainer = document.getElementById('festival-list');
+    const pinModal = document.getElementById('pin-modal');
+    const closeModalBtn = document.getElementById('close-modal');
+
+    // Googleマップの初期化
+    function initMap() {
+        const sado = { lat: 38.0195, lng: 138.2570 };
+        map = new google.maps.Map(document.getElementById("google-map"), {
+            center: sado,
+            zoom: 10,
+        });
+        
+        setupEventListenersAndRender();
+    }
+
+    const setupEventListenersAndRender = () => {
+        // マーカーのレンダリング
+        const renderMarkers = (data) => {
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+            data.forEach(festival => {
+                const marker = new google.maps.Marker({
+                    position: { lat: festival.lat, lng: festival.lng },
+                    map: map,
+                    title: festival.name,
+                    animation: google.maps.Animation.DROP,
+                });
+
+                marker.addListener('click', () => {
+                    showModal(festival);
+                });
+
+                markers.push(marker);
+            });
+        };
+        
+        // カードのレンダリング
+        const renderCards = (data) => {
+            festivalListContainer.innerHTML = '';
+            data.forEach(festival => {
+                const cardHtml = `
+                    <div class="card bg-white rounded-xl overflow-hidden mb-4 w-full sm:w-1/2 md:w-1/3" data-lat="${festival.lat}" data-lng="${festival.lng}" data-name="${festival.name}" data-url="${festival.url}">
+                        <div class="relative">
+                            <img src="${festival.image}" alt="${festival.name}" class="w-full h-24 object-cover">
+                            <div class="absolute top-1 left-1 bg-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-lg">
+                                <i class="fas fa-clock mr-1"></i>あと3日
+                            </div>
+                        </div>
+                        <div class="p-2">
+                            <h2 class="text-lg font-bold text-gray-800 truncate">${festival.name}</h2>
+                            <p class="text-xs text-gray-500 mt-1">開催日: ${festival.date}</p>
+                            <p class="text-gray-700 mt-1 text-xs truncate">${festival.description}</p>
+                            <div class="flex flex-wrap gap-1 mt-2">
+                                ${festival.tags.map(tag => `<span class="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs font-medium">#${tag}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                festivalListContainer.innerHTML += cardHtml;
+            });
+            // Add click event listeners to new cards
+            document.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('click', () => {
+                    showModal(festivals.find(f => f.name === card.dataset.name));
+                });
+            });
+        };
+
+        // フィルター機能
+        const filterFestivals = () => {
+            const searchText = searchBox.value.toLowerCase();
+            const selectedTags = Array.from(tagButtons).filter(btn => btn.classList.contains('selected')).map(btn => btn.dataset.tag);
+            
+            const filtered = festivals.filter(festival => {
+                const matchesSearch = searchText === '' || festival.name.toLowerCase().includes(searchText) || festival.tags.some(tag => tag.toLowerCase().includes(searchText));
+                
+                let matchesTag = true;
+                if (selectedTags.length > 0 && selectedTags[0] !== 'すべて') {
+                    matchesTag = selectedTags.every(tag => festival.tags.map(t => t.toLowerCase()).includes(tag.toLowerCase()));
+                }
+                return matchesSearch && matchesTag;
+            });
+
+            // 連動して表示を更新
+            renderMarkers(filtered);
+            renderCards(filtered);
+        };
+
+        // タブ切り替え機能
+        mapTab.addEventListener('click', () => {
+            mapTab.classList.add('active');
+            listTab.classList.remove('active');
+            mapView.style.display = 'flex';
+            listView.style.display = 'none';
+        });
+
+        listTab.addEventListener('click', () => {
+            listTab.classList.add('active');
+            mapTab.classList.remove('active');
+            listView.style.display = 'flex';
+            mapView.style.display = 'none';
+        });
+
+        // モーダルの表示
+        const showModal = (festival) => {
+            document.getElementById('modal-image').src = festival.image;
+            document.getElementById('modal-title').textContent = festival.name;
+            document.getElementById('modal-date').textContent = festival.date;
+            document.getElementById('modal-description').textContent = festival.description;
+            document.getElementById('modal-link').href = festival.url;
+
+            const tagsContainer = document.getElementById('modal-tags');
+            tagsContainer.innerHTML = '';
+            festival.tags.forEach(tag => {
+                const span = document.createElement('span');
+                span.className = 'bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs font-medium';
+                span.textContent = `#${tag}`;
+                tagsContainer.appendChild(span);
+            });
+
+            pinModal.style.display = 'flex';
+        };
+
+        // モーダルの非表示
+        closeModalBtn.addEventListener('click', () => {
+            pinModal.style.display = 'none';
+        });
+        pinModal.addEventListener('click', (e) => {
+            if (e.target === pinModal) {
+                pinModal.style.display = 'none';
+            }
+        });
+
+        // 検索ボックスのイベントリスナー
+        searchBox.addEventListener('input', () => {
+            tagButtons.forEach(btn => btn.classList.remove('selected'));
+            filterFestivals();
+        });
+
+        // タグボタンのイベントリスナー
+        tagButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                if (button.dataset.tag === 'すべて') {
+                    tagButtons.forEach(btn => btn.classList.remove('selected'));
+                    button.classList.add('selected');
+                } else {
+                    document.querySelector('[data-tag="すべて"]').classList.remove('selected');
+                    button.classList.toggle('selected');
+                    if (Array.from(tagButtons).every(btn => !btn.classList.contains('selected'))) {
+                         document.querySelector('[data-tag="すべて"]').classList.add('selected');
+                    }
+                }
+                searchBox.value = '';
+                filterFestivals();
+            });
+        });
+
+        // 初期表示
+        document.querySelector('[data-tag="すべて"]').classList.add('selected');
+        filterFestivals();
+    };
+    
+</script>
+
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB4VEihrycQJKeszHDh3Epy1rFVHpaT_70&callback=initMap"></script>
+
+</body>
+</html>

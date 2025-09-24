@@ -2,7 +2,7 @@ import React from 'react';
 import './SearchResultItem.scss';
 
 type SearchResultItemProps = {
-  shop: any; // TypeScriptの警告を回避するためにany型を使用
+  shop: Pwamap.FestivalData;
   onClick: () => void;
 };
 

@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 import { makeDistanceLabelText } from "./distance-label";
 
 type Props = {
-  data: Pwamap.ShopData;
-  popupHandler: Function;
+  data: Pwamap.FestivalData;
+  popupHandler: (data: Pwamap.FestivalData) => void;
   queryCategory: string | null;
 };
 
@@ -48,11 +48,13 @@ const Content = (props: Props) => {
           <span className="distance">現在位置から {distanceTipText}</span>
         </span>
       </div>
-      <div style={{ margin: "10px 10px 10px 0" }}>
-        { image && <img src={image} alt={props.data['スポット名']} onClick={clickHandler}/> }
-      </div>
-      <div className="right" onClick={clickHandler}>
-        <BsChevronCompactRight size="40px" color="#CCCCCC" />
+      <div className="shop-list-item-content" onClick={clickHandler}>
+        <div className="shop-list-item-image">
+          {image && <img src={image} alt={props.data['スポット名']} />}
+        </div>
+        <div className="shop-list-item-arrow">
+          <BsChevronCompactRight />
+        </div>
       </div>
     </div>
   );

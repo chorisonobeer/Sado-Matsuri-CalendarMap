@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佐渡ヶ島お祭りアプリ ダッシュボード</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: #333333; /* ダークグレーの背景 */
+            display: flex;
+            justify-content: center; /* 左右中央揃え */
+            align-items: flex-start; /* 上揃え */
+            min-height: 100vh;
+            padding-top: 20px;
+        }
+        .phone-mockup {
+            width: 414px;
+            height: 896px;
+            background-color: #ffffff;
+            border-radius: 40px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            display: flex; /* flexコンテナとして設定 */
+            flex-direction: column; /* 子要素を縦に並べる */
+        }
+        .card-list {
+            height: calc(896px * 2 / 3); /* 親要素の高さの2/3を計算 */
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 0.5rem;
+            background-color: #f0f4f8;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        .map-container {
+            height: calc(896px * 1 / 3); /* 親要素の高さの1/3を計算 */
+            overflow: hidden;
+            position: relative;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-image {
+            height: 100px; /* カード内の画像の高さを固定 */
+            object-fit: cover;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+        }
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 30px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+        }
+        /* 地図上のピンのスタイル */
+        .map-pin {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: red;
+            border: 2px solid white;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            z-index: 50;
+        }
+        .map-pin::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: white;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-mockup">
+        <!-- Card List (Top 2/3) -->
+        <main id="event-list" class="card-list">
+            <!-- JavaScriptでカードを挿入 -->
+        </main>
+
+        <!-- Map (Bottom 1/3) -->
+        <div class="map-container">
+            <!-- 地図の中心を佐渡全体に固定 -->
+            <iframe id="map-iframe" src="https://www.google.com/maps/embed/v1/view?key=AIzaSyB4VEihrycQJKeszHDh3Epy1rFVHpaT_70&center=38.0195,138.2570&zoom=10" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+            <!-- ピンを動的に追加するコンテナ -->
+            <div id="map-pin-container" class="absolute inset-0 pointer-events-none"></div>
+        </div>
+    </div>
+
+    <!-- Modal for Event Details -->
+    <div id="event-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeEventModal()">&times;</span>
+            <div id="event-details" class="p-4">
+                <!-- イベント詳細がここに動的に挿入されます -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = "AIzaSyB4VEihrycQJKeszHDh3Epy1rFVHpaT_70";
+        let lastClickedCardId = null;
+
+        // ダミーデータ
+        const events = [
+            {
+                id: 1,
+                name: "両津花火大会",
+                description: "夏の夜空を彩る佐渡最大の水中花火。出店も多数あり賑わいます。",
+                location_name: "両津湾",
+                address: "新潟県佐渡市両津湊",
+                latitude: 38.0805,
+                longitude: 138.4503,
+                start_date: "2025-08-15",
+                end_date: "2025-08-15",
+                start_time: "19:30",
+                end_time: "21:00",
+                is_free: true,
+                has_parking: true,
+                has_food_stalls: true,
+                top_category: "花火",
+                tags: ["夏祭り", "花火"],
+                status: "開催予定",
+                image_urls: [
+                    "https://placehold.co/600x400/222222/FFFFFF?text=花火大会",
+                    "https://placehold.co/600x400/222222/FFFFFF?text=花火大会2"
+                ],
+                official_link: "https://sado.com/ryotsu-hanabi",
+                highlights: "水中花火の迫力は圧巻です。",
+                access_info: "両津港から徒歩5分"
+            },
+            {
+                id: 2,
+                name: "佐渡鬼太鼓祭り",
+                description: "佐渡に伝わる鬼太鼓を一堂に集めた祭りで、力強い舞が魅力です。",
+                location_name: "真野公園",
+                address: "新潟県佐渡市真野",
+                latitude: 37.9621,
+                longitude: 138.2934,
+                start_date: "2025-09-20", 
+                end_date: "2025-09-20",
+                start_time: "10:00",
+                end_time: "16:00",
+                is_free: true,
+                has_parking: true,
+                has_food_stalls: true,
+                top_category: "伝統芸能",
+                tags: ["鬼太鼓", "伝統芸能"],
+                status: "開催予定",
+                image_urls: [
+                    "https://placehold.co/600x400/8A2BE2/FFFFFF?text=鬼太鼓",
+                    "https://placehold.co/600x400/8A2BE2/FFFFFF?text=鬼太鼓2"
+                ],
+                official_link: "https://sado.com/onidaiko-fes",
+                highlights: "集落ごとに違う鬼太鼓の舞が見比べられます。",
+                access_info: "佐渡汽船から車で20分"
+            },
+            {
+                id: 3,
+                name: "相川やまびこ祭り",
+                description: "相川地区の商店街で行われる、地域住民による手作りのお祭りです。",
+                location_name: "相川商店街",
+                address: "新潟県佐渡市相川",
+                latitude: 38.0315,
+                longitude: 138.2501,
+                start_date: "2025-09-25", 
+                end_date: "2025-09-25",
+                start_time: "11:00",
+                end_time: "18:00",
+                is_free: true,
+                has_parking: false,
+                has_food_stalls: true,
+                top_category: "食",
+                tags: ["グルメ", "出店", "手仕事"],
+                status: "開催予定",
+                image_urls: [
+                    "https://placehold.co/600x400/32CD32/FFFFFF?text=地元グルメ",
+                    "https://placehold.co/600x400/32CD32/FFFFFF?text=地元グルメ2"
+                ],
+                official_link: "https://sado.com/aikawa-yamabiko",
+                highlights: "地元グルメの屋台が多数出店します。",
+                access_info: "路線バス「相川」バス停下車"
+            },
+            {
+                id: 4,
+                name: "佐渡金山祭り",
+                description: "佐渡金山の歴史を祝うお祭り。",
+                location_name: "佐渡金山",
+                address: "新潟県佐渡市相川金山",
+                latitude: 38.0305,
+                longitude: 138.2551,
+                start_date: "2025-10-01", 
+                end_date: "2025-10-01",
+                start_time: "10:00",
+                end_time: "17:00",
+                is_free: false,
+                has_parking: true,
+                has_food_stalls: false,
+                top_category: "歴史",
+                tags: ["歴史"],
+                status: "開催予定",
+                image_urls: [
+                    "https://placehold.co/600x400/CD853F/FFFFFF?text=佐渡金山",
+                    "https://placehold.co/600x400/CD853F/FFFFFF?text=佐渡金山2"
+                ],
+                official_link: "https://sado.com/kinzan-fes",
+                highlights: "金山内部での特別なイベント。",
+                access_info: "相川から車で5分"
+            }
+        ];
+        
+        // カードのレンダリング
+        function renderEventCards() {
+            const eventList = document.getElementById('event-list');
+            eventList.innerHTML = '';
+            events.forEach(event => {
+                const cardHtml = `
+                    <div class="card p-2" onclick="handleCardClick(${event.id})">
+                        <div class="relative rounded-lg overflow-hidden mb-2">
+                            <img src="${event.image_urls[0]}" alt="${event.name}" class="w-full card-image">
+                            <span class="absolute top-1 right-1 bg-indigo-600 text-white text-xs px-2 py-1 rounded-full font-bold">${event.status}</span>
+                        </div>
+                        <h2 class="text-sm font-bold text-gray-800">${event.name}</h2>
+                        <p class="text-gray-600 text-xs">${event.start_date.substring(5)} | ${event.location_name}</p>
+                    </div>
+                `;
+                eventList.innerHTML += cardHtml;
+            });
+        }
+        
+        // カードのクリックハンドラー
+        function handleCardClick(id) {
+            if (lastClickedCardId === id) {
+                // 前回と同じカードをタップした場合
+                openEventModal(id);
+                lastClickedCardId = null; // リセット
+            } else {
+                // 別のカードをタップした場合
+                updateMap(id);
+                lastClickedCardId = id;
+            }
+        }
+
+        // 地図を更新する
+        function updateMap(id) {
+            const event = events.find(e => e.id === id);
+            if (!event) return;
+
+            // 地図上の既存のピンを削除
+            const pinContainer = document.getElementById('map-pin-container');
+            pinContainer.innerHTML = '';
+            
+            // 地図の埋め込み座標を取得
+            const mapIframe = document.getElementById('map-iframe');
+            const mapRect = mapIframe.getBoundingClientRect();
+            const mapCenterLat = 38.0195;
+            const mapCenterLng = 138.2570;
+            const zoomLevel = 10;
+            const pixelsPerDegreeLat = mapRect.height / (180 / Math.pow(2, zoomLevel - 1));
+            const pixelsPerDegreeLng = mapRect.width / (360 / Math.pow(2, zoomLevel - 1));
+            
+            // ピンの位置を計算
+            const pinTop = (mapCenterLat - event.latitude) * pixelsPerDegreeLat + mapRect.height / 2;
+            const pinLeft = (event.longitude - mapCenterLng) * pixelsPerDegreeLng + mapRect.width / 2;
+            
+            // ピンの要素を生成して追加
+            const pin = document.createElement('div');
+            pin.className = 'map-pin';
+            pin.style.top = `${pinTop - 30}px`; // ピンの高さ分を調整
+            pin.style.left = `${pinLeft - 15}px`; // ピンの幅の半分を調整
+            pinContainer.appendChild(pin);
+        }
+
+        // イベント詳細モーダルを開く
+        function openEventModal(id) {
+            const event = events.find(e => e.id === id);
+            if (!event) return;
+
+            const modalContent = document.getElementById('event-details');
+            modalContent.innerHTML = `
+                <img src="${event.image_urls[0]}" alt="${event.name}" class="w-full h-48 object-cover rounded-lg mb-4">
+                <h2 class="text-2xl font-bold mb-2">${event.name}</h2>
+                <p class="text-gray-600 mb-4">${event.description}</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="font-bold">場所:</p>
+                        <p>${event.location_name}</p>
+                        <p>${event.address}</p>
+                    </div>
+                    <div>
+                        <p class="font-bold">日時:</p>
+                        <p>${event.start_date} ${event.start_time} - ${event.end_time}</p>
+                    </div>
+                    <div>
+                        <p class="font-bold">料金:</p>
+                        <p>${event.is_free ? '無料' : '有料'}</p>
+                    </div>
+                    <div>
+                        <p class="font-bold">駐車場:</p>
+                        <p>${event.has_parking ? 'あり' : 'なし'}</p>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <p class="font-bold">ハイライト:</p>
+                    <p>${event.highlights}</p>
+                </div>
+                <div class="mt-4">
+                    <p class="font-bold">アクセス:</p>
+                    <p>${event.access_info}</p>
+                </div>
+                <div class="mt-6 flex justify-center">
+                    <a href="${event.official_link}" target="_blank" class="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition">公式サイトへ</a>
+                </div>
+            `;
+
+            document.getElementById('event-modal').style.display = 'flex';
+        }
+
+        // モーダルを閉じる
+        function closeEventModal() {
+            document.getElementById('event-modal').style.display = 'none';
+        }
+
+        // 初期表示とイベントリスナーの登録
+        document.addEventListener('DOMContentLoaded', () => {
+            renderEventCards();
+        });
+    </script>
+</body>
+</html>

@@ -5,10 +5,11 @@
  */
 
 import React, { useEffect, useState } from "react";
-import Papa from "papaparse";
+import * as Papa from "papaparse";
 import config from "../config.json";
 import LoadingSpinner from "./LoadingSpinner";
 import "./Events.scss";
+import { parseCsvByHeader, stripWrappingQuotes } from "../lib/csv";
 
 type EventData = Pwamap.EventData;
 
@@ -53,14 +54,45 @@ const Events: React.FC = () => {
           .then((csv) => {
             Papa.parse(csv, {
               header: true,
-              dynamicTyping: true,
               complete: (results) => {
                 const features = results.data as EventData[];
                 const nextEventList: EventData[] = [];
-                const urlKeys: (keyof EventData)[] = ["公式サイト", "Instagram", "Facebook", "X"];
+                const urlKeys: (keyof EventData)[] = ["公式サイト", "公式リンク", "Instagram", "Facebook", "X"];
                 for (let i = 0; i < features.length; i++) {
                   const feature = { ...features[i] };
-                  if (!feature["イベント名"] || !feature["開催期間"]) continue;
+                  // 新しいフィールド名と旧フィールド名の両方をチェック
+                  if (!feature["イベント名"]) continue;
+                  
+                  // 開催期間の互換性処理
+                  if (!feature["開催期間"] && feature["開始日"]) {
+                    feature["開催期間"] = `${feature["開始日"]}～${feature["終了日"] || feature["開始日"]}`;
+                  }
+                  
+                  // 場所の互換性処理
+                  if (!feature["場所"] && feature["会場名"]) {
+                    feature["場所"] = feature["会場名"] + (feature["住所"] ? `（${feature["住所"]}）` : '');
+                  }
+                  
+                  // 説明文の互換性処理
+                  if (!feature["説明文"] && feature["簡単な説明"]) {
+                    feature["説明文"] = feature["簡単な説明"];
+                  }
+                  
+                  // タグの互換性処理
+                  if (!feature["タグ"] && feature["詳細タグ"]) {
+                    feature["タグ"] = feature["詳細タグ"];
+                  }
+                  
+                  // 公式サイトの互換性処理
+                  if (!feature["公式サイト"] && feature["公式リンク"]) {
+                    feature["公式サイト"] = feature["公式リンク"];
+                  }
+                  
+                  // 画像URLの互換性処理
+                  if (!feature["画像URL1"] && feature["写真URL"]) {
+                    feature["画像URL1"] = feature["写真URL"];
+                  }
+                  
                   urlKeys.forEach(key => {
                     let value = feature[key] as string | undefined;
                     if (value && typeof value === 'string') {
@@ -102,47 +134,50 @@ const Events: React.FC = () => {
         return response.text();
       })
       .then((csv) => {
-        Papa.parse(csv, {
-          header: true,
-          dynamicTyping: true,
-          complete: (results) => {
-            const features = results.data as EventData[];
-            const nextEventList: EventData[] = [];
-            const urlKeys: (keyof EventData)[] = ["公式サイト", "Instagram", "Facebook", "X"];
-            for (let i = 0; i < features.length; i++) {
-              const feature = { ...features[i] };
-              if (!feature["イベント名"] || !feature["開催期間"]) continue;
-              urlKeys.forEach(key => {
-                let value = feature[key] as string | undefined;
-                if (value && typeof value === 'string') {
-                  value = value.trim();
-                  if (value.startsWith('"') && value.endsWith('"')) {
-                    value = value.substring(1, value.length - 1);
-                  }
-                  if (value.startsWith("'") && value.endsWith("'")) {
-                    value = value.substring(1, value.length - 1);
-                  }
-                  if (value.startsWith('`') && value.endsWith('`')) {
-                    value = value.substring(1, value.length - 1);
-                  }
-                  (feature[key] as string) = value.trim();
-                }
-              });
-              const event = { index: i, ...feature };
-              nextEventList.push(event);
+        const features = parseCsvByHeader<EventData>(csv, {
+          requiredFields: ["イベント名"],
+          transform: (record, i) => {
+            const feature = { ...(record as any) } as EventData;
+            // 開催期間の互換性処理
+            if (!feature["開催期間"] && (feature as any)["開始日"]) {
+              (feature as any)["開催期間"] = `${(feature as any)["開始日"]}～${(feature as any)["終了日"] || (feature as any)["開始日"]}`;
             }
-            setEventList(nextEventList);
-            sessionStorage.setItem(cacheKey, JSON.stringify(nextEventList));
-            setLoading(false);
-          },
-          error: () => {
-            setError("CSVパースエラー");
-            setLoading(false);
+            // 場所の互換性処理
+            if (!feature["場所"] && (feature as any)["会場名"]) {
+              (feature as any)["場所"] = (feature as any)["会場名"] + ((feature as any)["住所"] ? `（${(feature as any)["住所"]}）` : '');
+            }
+            // 説明文の互換性処理
+            if (!feature["説明文"] && (feature as any)["簡単な説明"]) {
+              (feature as any)["説明文"] = (feature as any)["簡単な説明"];
+            }
+            // タグの互換性処理
+            if (!feature["タグ"] && (feature as any)["詳細タグ"]) {
+              (feature as any)["タグ"] = (feature as any)["詳細タグ"];
+            }
+            // 公式サイトの互換性処理
+            if (!feature["公式サイト"] && (feature as any)["公式リンク"]) {
+              (feature as any)["公式サイト"] = (feature as any)["公式リンク"];
+            }
+            // 画像URLの互換性処理
+            if (!(feature as any)["画像URL1"] && (feature as any)["写真URL"]) {
+              (feature as any)["画像URL1"] = (feature as any)["写真URL"];
+            }
+            // URL系の引用符除去
+            const urlKeys: (keyof EventData)[] = ["公式サイト", "公式リンク", "Instagram", "Facebook", "X"];
+            urlKeys.forEach((key) => {
+              const v = (feature as any)[key];
+              if (typeof v === 'string') (feature as any)[key] = stripWrappingQuotes(v);
+            });
+            return { index: i, ...feature } as EventData;
           }
         });
+        setEventList(features);
+        sessionStorage.setItem(cacheKey, JSON.stringify(features));
       })
       .catch((e) => {
         setError(e.message);
+      })
+      .finally(() => {
         setLoading(false);
       });
   }, [loading]);
@@ -229,7 +264,7 @@ const Events: React.FC = () => {
             <div className="event-detail-section event-detail-time">
               <strong>開催時間：</strong> 
               <span className="event-time-value">
-                {selectedEvent["開始/終了時間"] && (selectedEvent["開始/終了時間"] as string).split(' / ').map((time, index) => <React.Fragment key={index}>{time}{index < (selectedEvent["開始/終了時間"] as string).split(' / ').length - 1 && <br />}</React.Fragment>)}
+                {selectedEvent["開始/終了時間"] && (selectedEvent["開始/終了時間"] as string).split(' / ').map((time, timeIndex) => <React.Fragment key={timeIndex}>{time}{timeIndex < (selectedEvent["開始/終了時間"] as string).split(' / ').length - 1 && <br />}</React.Fragment>)}
               </span>
             </div>
             <div className="event-detail-section event-detail-description">{selectedEvent["説明文"]}</div>

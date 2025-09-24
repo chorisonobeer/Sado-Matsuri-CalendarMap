@@ -1,0 +1,211 @@
+/** 
+ * /src/App/EventModal.scss
+ * 2025-01-14T16:35+09:00
+ * 変更概要: 新規追加 - イベント詳細モーダルスタイル（モーダル背景、詳細情報表示）
+ */
+
+.event-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  backdrop-filter: blur(2px);
+}
+
+.event-modal {
+  background: white;
+  border-radius: 16px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+
+  .modal-header {
+    position: relative;
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+
+    .close-button {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: none;
+      border: none;
+      font-size: 2rem;
+      color: #718096;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: #f7fafc;
+        color: #2d3748;
+      }
+    }
+  }
+
+  .modal-content {
+    overflow-y: auto;
+    max-height: calc(90vh - 80px);
+
+    .event-image {
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    .event-details {
+      padding: 1.5rem;
+
+      .event-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0 0 1.5rem 0;
+        line-height: 1.3;
+      }
+
+      .detail-section {
+        margin-bottom: 1.5rem;
+
+        h3 {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #4a5568;
+          margin: 0 0 0.75rem 0;
+          border-bottom: 2px solid #667eea;
+          padding-bottom: 0.25rem;
+        }
+
+        .detail-item {
+          display: flex;
+          margin-bottom: 0.5rem;
+          align-items: flex-start;
+
+          .label {
+            font-weight: 500;
+            color: #718096;
+            min-width: 80px;
+            margin-right: 0.5rem;
+          }
+
+          .value {
+            color: #2d3748;
+            flex: 1;
+          }
+        }
+
+        .tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+
+          .tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+          }
+        }
+
+        .official-link-button {
+          display: inline-block;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          text-decoration: none;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// タブレット以上の画面サイズ
+@media (min-width: 768px) {
+  .event-modal {
+    max-width: 600px;
+
+    .modal-content {
+      .event-image {
+        height: 250px;
+      }
+
+      .event-details {
+        padding: 2rem;
+
+        .event-title {
+          font-size: 1.75rem;
+        }
+
+        .detail-section {
+          h3 {
+            font-size: 1.2rem;
+          }
+
+          .detail-item {
+            .label {
+              min-width: 100px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// デスクトップ画面サイズ
+@media (min-width: 1024px) {
+  .event-modal {
+    max-width: 700px;
+
+    .modal-content {
+      .event-image {
+        height: 300px;
+      }
+    }
+  }
+}

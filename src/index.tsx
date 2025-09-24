@@ -28,7 +28,7 @@ serviceWorkerRegistration.register({
       window.location.reload();
     }
   },
-  onSuccess: (registration) => {
+  onSuccess: (_registration) => {
     console.log('Service Worker registered successfully');
   }
 });

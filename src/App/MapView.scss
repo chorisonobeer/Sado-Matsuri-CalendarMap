@@ -1,0 +1,79 @@
+/** 
+ * /src/App/MapView.scss
+ * 2025-01-14T16:30+09:00
+ * 変更概要: 新規追加 - 地図表示スタイル（地図コンテナ、ローディング表示）
+ */
+
+.map-view {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #f0f0f0;
+
+  .map-container {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+  }
+
+  .map-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(248, 249, 250, 0.9);
+    z-index: 10;
+
+    .loading-spinner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      color: #667eea;
+      font-weight: 500;
+
+      &::before {
+        content: '';
+        width: 20px;
+        height: 20px;
+        border: 2px solid #e2e8f0;
+        border-top: 2px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 0.5rem;
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// Google Maps のデフォルトスタイルを調整
+.map-view {
+  // Google Maps のコントロールボタンを非表示
+  .gm-style-cc {
+    display: none !important;
+  }
+
+  // Google Maps のロゴを小さく表示
+  .gm-style .gm-style-mtc {
+    display: none !important;
+  }
+
+  // フルスクリーンボタンを非表示
+  .gm-fullscreen-control {
+    display: none !important;
+  }
+}

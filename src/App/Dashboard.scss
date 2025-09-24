@@ -1,0 +1,96 @@
+/** 
+ * /src/App/Dashboard.scss
+ * 2025-01-14T16:20+09:00
+ * 変更概要: 新規追加 - ダッシュボードスタイル（2/3イベント一覧、1/3地図表示）
+ */
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f8f9fa;
+
+  .dashboard-header {
+    padding: 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+  }
+
+  .dashboard-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .events-section {
+    flex: 2;
+    overflow-y: auto;
+    padding: 1rem;
+    background-color: #ffffff;
+
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      max-width: 100%;
+    }
+  }
+
+  .map-section {
+    flex: 1;
+    min-height: 200px;
+    border-top: 2px solid #e9ecef;
+    position: relative;
+  }
+}
+
+// タブレット以上の画面サイズ
+@media (min-width: 768px) {
+  .dashboard {
+    .dashboard-header {
+      h1 {
+        font-size: 2rem;
+      }
+    }
+
+    .events-section {
+      padding: 1.5rem;
+
+      .events-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+      }
+    }
+
+    .map-section {
+      min-height: 300px;
+    }
+  }
+}
+
+// デスクトップ画面サイズ
+@media (min-width: 1024px) {
+  .dashboard {
+    .events-section {
+      padding: 2rem;
+
+      .events-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2rem;
+      }
+    }
+
+    .map-section {
+      min-height: 400px;
+    }
+  }
+}

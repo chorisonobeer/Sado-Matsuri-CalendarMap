@@ -4,7 +4,7 @@ import { FaTwitter, FaInstagram, FaHome, FaFacebook } from 'react-icons/fa';
 import './Links.scss'
 
 type Props = {
-  data: Pwamap.ShopData;
+  data: Pwamap.FestivalData;
 };
 
 const noop = (e: React.MouseEvent) => {

@@ -3,7 +3,7 @@
  * 2025-05-02T10:00+09:00
  * 変更概要: 新潟クラフトビールマップ向けに全面リライト - UIデザイン改善
  */
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './AboutUs.scss';
 import config from '../config.json';
 import { FaPlus, FaBeer, FaMapMarkedAlt, FaSearch, FaCamera, FaInfoCircle } from 'react-icons/fa';

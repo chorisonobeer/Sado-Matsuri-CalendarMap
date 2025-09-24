@@ -1,5 +1,5 @@
 export const askGeolocationPermission = () => {
-  return new Promise<Pwamap.LngLat | null>((resolve, reject) => {
+  return new Promise<Pwamap.LngLat | null>((resolve, _reject) => {
 
     if(!window.navigator.geolocation || !window.navigator.geolocation.getCurrentPosition) {
       resolve(null)
@@ -11,7 +11,7 @@ export const askGeolocationPermission = () => {
         const lng = pos.coords.longitude
         resolve([lng, lat])
       },
-      (error) => {
+      (_error) => {
         resolve(null)
       },
       {

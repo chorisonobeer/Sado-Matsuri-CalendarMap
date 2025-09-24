@@ -1,26 +1,30 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './SearchFeature.scss';
 
-type SearchFeatureProps = {
-  data: Pwamap.ShopData[];
-  onSearchResults: (results: Pwamap.ShopData[]) => void;
-  onSelectShop: (shop: Pwamap.ShopData) => void;
+type Props = {
+  data: Pwamap.FestivalData[];
+  onSearchResults: (results: Pwamap.FestivalData[]) => void;
+  onSelectShop: (shop: Pwamap.FestivalData) => void;
 };
 
-const SearchFeature: React.FC<SearchFeatureProps> = ({ data, onSearchResults, onSelectShop }) => {
+const SearchFeature: React.FC<Props> = ({ data, onSearchResults, onSelectShop }) => {
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedArea, setSelectedArea] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>(""); // 開催ステータス用の状態を追加
   const [isOpenNow, setIsOpenNow] = useState(false);
   const [hasParking, setHasParking] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   const [areas, setAreas] = useState<string[]>([]);
+  const [statuses, setStatuses] = useState<string[]>([]); // 開催ステータス一覧を追加
   const [showResults, setShowResults] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
-  const [filteredResults, setFilteredResults] = useState<Pwamap.ShopData[]>([]);
+  const [showStatusDropdown, setShowStatusDropdown] = useState<boolean>(false); // 開催ステータス用のドロップダウン状態を追加
+  const [filteredResults, setFilteredResults] = useState<Pwamap.FestivalData[]>([]);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const areaDropdownRef = useRef<HTMLDivElement>(null);
+  const statusDropdownRef = useRef<HTMLDivElement>(null); // 開催ステータス用のrefを追加
 
   // クリック外のイベントを監視して、ドロップダウンを閉じる
   useEffect(() => {
@@ -30,6 +34,9 @@ const SearchFeature: React.FC<SearchFeatureProps> = ({ data, onSearchResults, on
       }
       if (areaDropdownRef.current && !areaDropdownRef.current.contains(event.target as Node)) {
         setShowAreaDropdown(false);
+      }
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
+        setShowStatusDropdown(false);
       }
     }
     
@@ -43,7 +50,7 @@ const SearchFeature: React.FC<SearchFeatureProps> = ({ data, onSearchResults, on
   useEffect(() => {
     if (data.length > 0) {
       const allCategories = data
-        .map(shop => shop['カテゴリ'])
+        .map(shop => shop['上位カテゴリ'])
         .filter(Boolean)
         .flatMap(category => category.split(/,|、|\s+/))
         .map(category => category.trim())
@@ -56,11 +63,27 @@ const SearchFeature: React.FC<SearchFeatureProps> = ({ data, onSearchResults, on
     }
   }, [data]);
 
+  // 開催ステータス一覧を作成
+  useEffect(() => {
+    if (data.length > 0) {
+      const allStatuses = data
+        .map(shop => shop['開催ステータス'])
+        .filter(Boolean)
+        .map(status => status.trim())
+        .filter(status => status !== '');
+      
+      const uniqueStatuses = Array.from(new Set(allStatuses))
+        .sort();
+      
+      setStatuses(uniqueStatuses);
+    }
+  }, [data]);
+
   // カテゴリごとの件数を計算
   const getCategoryCount = (category: string): number => {
     return data.filter(shop => {
-      if (!shop['カテゴリ']) return false;
-      const shopCategories = shop['カテゴリ']
+      if (!shop['上位カテゴリ']) return false;
+      const shopCategories = shop['上位カテゴリ']
         .split(/,|、|\s+/)
         .map(cat => cat.trim())
         .filter(cat => cat !== '');
@@ -68,16 +91,21 @@ const SearchFeature: React.FC<SearchFeatureProps> = ({ data, onSearchResults, on
     }).length;
   };
 
+  // 開催ステータスごとの件数を計算
+  const getStatusCount = (status: string): number => {
+    return data.filter(shop => shop['開催ステータス'] === status).length;
+  };
+
   // エリアごとの件数を計算
   const getAreaCount = (area: string): number => {
-    return data.filter(shop => shop['エリア'] === area).length;
+    return data.filter(shop => shop['開催場所名'] === area).length;
   };
 
   // エリア一覧を作成
   useEffect(() => {
     if (data.length > 0) {
       const uniqueAreas = Array.from(new Set(data
-        .map(shop => shop['エリア'])
+        .map(shop => shop['開催場所名'])
         .filter(Boolean)))
         .sort();
       
@@ -86,7 +114,7 @@ const SearchFeature: React.FC<SearchFeatureProps> = ({ data, onSearchResults, on
   }, [data]);
 
   // 営業時間の判定
-  const isShopOpen = (shop: Pwamap.ShopData): boolean => {
+  const isShopOpen = (shop: Pwamap.FestivalData): boolean => {
     if (!shop['営業時間']) return false;
 
     const now = new Date();
@@ -101,8 +129,8 @@ const SearchFeature: React.FC<SearchFeatureProps> = ({ data, onSearchResults, on
     if (shop['定休日']) {
       const closedDays = shop['定休日']
         .split(/,|、|\s+/)
-        .map(day => day.trim())
-        .filter(day => day !== '');
+        .map((day: string) => day.trim())
+        .filter((day: string) => day !== '');
       if (closedDays.some(day => day.includes(dayOfWeek))) {
         return false;
       }
@@ -130,7 +158,7 @@ const SearchFeature: React.FC<SearchFeatureProps> = ({ data, onSearchResults, on
   };
 
   // 駐車場の判定
-  const hasParkingSpace = (shop: Pwamap.ShopData): boolean => {
+  const hasParkingSpace = (shop: Pwamap.FestivalData): boolean => {
     if (!shop['駐車場']) return false;
     const parkingStr = shop['駐車場'].trim();
     const parkingCountMatch = parkingStr.match(/(\d+)/);
@@ -157,14 +185,17 @@ const SearchFeature: React.FC<SearchFeatureProps> = ({ data, onSearchResults, on
 
       // カテゴリフィルター
       if (selectedCategory) {
-        const shopCategories = shop['カテゴリ']
-          ? shop['カテゴリ'].split(/,|、|\s+/).map(cat => cat.trim())
+        const shopCategories = shop['上位カテゴリ']
+          ? shop['上位カテゴリ'].split(/,|、|\s+/).map(cat => cat.trim())
           : [];
         if (!shopCategories.includes(selectedCategory)) return false;
       }
 
       // エリアフィルター
-      if (selectedArea && shop['エリア'] !== selectedArea) return false;
+      if (selectedArea && shop['開催場所名'] !== selectedArea) return false;
+
+      // 開催ステータスフィルター
+      if (selectedStatus && shop['開催ステータス'] !== selectedStatus) return false;
 
       // 営業時間フィルター
       if (isOpenNow && !isShopOpen(shop)) return false;
@@ -177,7 +208,25 @@ const SearchFeature: React.FC<SearchFeatureProps> = ({ data, onSearchResults, on
 
     setFilteredResults(filtered);
     onSearchResults(filtered);
-  }, [data, query, selectedCategory, selectedArea, isOpenNow, hasParking, onSearchResults]);
+  }, [data, query, selectedCategory, selectedArea, selectedStatus, isOpenNow, hasParking, onSearchResults]);
+
+  // 開催ステータス選択ハンドラー
+  const handleStatusSelect = (status: string) => {
+    setSelectedStatus(status);
+    setShowStatusDropdown(false);
+    
+    // 「すべて」選択時は全てのフィルター条件をリセット
+    if (status === '') {
+      setSelectedCategory('');
+      setSelectedArea('');
+      setIsOpenNow(false);
+      setHasParking(false);
+      setQuery('');
+      setShowResults(false);
+      // 全データを表示するためにonSearchResultsを呼び出し
+      onSearchResults(data);
+    }
+  };
 
   // フィルター条件が変わったら再フィルタリング
   useEffect(() => {
@@ -231,7 +280,7 @@ const SearchFeature: React.FC<SearchFeatureProps> = ({ data, onSearchResults, on
   };
 
   // 結果アイテムクリックハンドラー
-  const handleResultClick = (shop: Pwamap.ShopData) => {
+  const handleResultClick = (shop: Pwamap.FestivalData) => {
     onSelectShop(shop);
     setShowResults(false);
   };
@@ -322,6 +371,38 @@ const SearchFeature: React.FC<SearchFeatureProps> = ({ data, onSearchResults, on
                   >
                     <span className="dropdown-item-text">{area}</span>
                     <span className="dropdown-item-count">{getAreaCount(area)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 開催ステータスドロップダウン */}
+          <div className="filter-item status-filter" ref={statusDropdownRef}>
+            <div 
+              className={`custom-dropdown-header ${selectedStatus !== '' ? 'active' : ''}`}
+              onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+            >
+              {selectedStatus === '' ? '開催ステータス' : selectedStatus}
+              <span className="dropdown-icon">▼</span>
+            </div>
+            {showStatusDropdown && (
+              <div className="custom-dropdown-list">
+                <div 
+                  className="custom-dropdown-item"
+                  onClick={() => handleStatusSelect('')}
+                >
+                  <span className="dropdown-item-text">すべて</span>
+                  <span className="dropdown-item-count">{data.length}</span>
+                </div>
+                {statuses.map((status) => (
+                  <div
+                    key={status}
+                    className="custom-dropdown-item"
+                    onClick={() => handleStatusSelect(status)}
+                  >
+                    <span className="dropdown-item-text">{status}</span>
+                    <span className="dropdown-item-count">{getStatusCount(status)}</span>
                   </div>
                 ))}
               </div>

@@ -8,7 +8,7 @@ import { GeolocationContext } from "../context/GeolocationContext";
 import * as turf from "@turf/turf";
 
 type Props = {
-  shop: Pwamap.ShopData;
+  shop: Pwamap.FestivalData;
   close: () => void;
 };
 
