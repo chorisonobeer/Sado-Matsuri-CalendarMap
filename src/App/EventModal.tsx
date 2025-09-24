@@ -4,7 +4,7 @@
  * 変更概要: 新規追加 - イベント詳細モーダルコンポーネント（全詳細情報表示）
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './EventModal.scss';
 
 interface EventModalProps {
@@ -14,6 +14,8 @@ interface EventModalProps {
 }
 
 const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   // ESCキーでモーダルを閉じる
   useEffect(() => {
     const handleEscKey = (e: KeyboardEvent) => {
@@ -41,19 +43,47 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }) => {
   };
 
   // 日時フォーマット
-  const formatDateTime = (dateString: string, timeString?: string) => {
+  const formatDateTime = (dateString: string) => {
     if (!dateString) return '';
     try {
       const date = new Date(dateString);
-      const dateStr = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
-      return timeString ? `${dateStr} ${timeString}` : dateStr;
+      return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
     } catch {
       return dateString;
     }
   };
 
-  // 代表画像を取得
-  const getEventImage = () => {
+  // 日時表示フォーマット（開始日/時刻-終了時刻、終了日/時刻の形式）
+  const formatEventDateTime = () => {
+    const startDate = formatDateTime(event.開始日);
+    const endDate = event.終了日 ? formatDateTime(event.終了日) : '';
+    const startTime = event.開始時刻 || '';
+    const endTime = event.終了時刻 || '';
+
+    let result = '';
+    if (startDate) {
+      result += startDate;
+      if (startTime && endTime) {
+        result += ` / ${startTime} - ${endTime}`;
+      } else if (startTime) {
+        result += ` / ${startTime}`;
+      }
+    }
+
+    if (endDate && endDate !== startDate) {
+      result += '\n' + endDate;
+      if (startTime && endTime) {
+        result += ` / ${startTime} - ${endTime}`;
+      } else if (startTime) {
+        result += ` / ${startTime}`;
+      }
+    }
+
+    return result || '日時未定';
+  };
+
+  // 全画像を取得
+  const getEventImages = () => {
     const imageUrls = [
       event.写真URL1,
       event.写真URL2,
@@ -62,8 +92,26 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }) => {
       event.写真URL5
     ].filter(url => url && url.trim() !== '');
 
-    return imageUrls.length > 0 ? imageUrls[0] : '/hero-sado.png';
+    return imageUrls.length > 0 ? imageUrls : ['/hero-sado.png'];
   };
+
+  const eventImages = getEventImages();
+
+  // 画像切り替え
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % eventImages.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + eventImages.length) % eventImages.length);
+  };
+
+  // モーダルが開かれた時に画像インデックスをリセット
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentImageIndex(0);
+    }
+  }, [isOpen]);
 
   // 詳細タグを取得
   const getDetailTags = () => {
@@ -91,36 +139,63 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }) => {
         </div>
 
         <div className="modal-content">
-          <div className="event-image">
-            <img 
-              src={getEventImage()} 
-              alt={event.お祭り名}
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = '/hero-sado.png';
-              }}
-            />
+          <div className="event-image-container">
+            <div className="event-image">
+              <img 
+                src={eventImages[currentImageIndex]} 
+                alt={`${event.お祭り名} - 画像${currentImageIndex + 1}`}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = '/hero-sado.png';
+                }}
+              />
+              {eventImages.length > 1 && (
+                <>
+                  <button className="image-nav prev" onClick={prevImage}>‹</button>
+                  <button className="image-nav next" onClick={nextImage}>›</button>
+                  <div className="image-indicators">
+                    {eventImages.map((_, index) => (
+                      <span 
+                        key={index} 
+                        className={`indicator ${index === currentImageIndex ? 'active' : ''}`}
+                        onClick={() => setCurrentImageIndex(index)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="event-details">
             <h2 className="event-title">{event.お祭り名}</h2>
             
+            {event.簡単な説明 && (
+              <div className="event-description">
+                {event.簡単な説明}
+              </div>
+            )}
+
             <div className="detail-section">
               <h3>開催情報</h3>
               <div className="detail-item">
-                <span className="label">場所:</span>
-                <span className="value">{event.開催場所名}</span>
+                <span className="label">日時:</span>
+                <span className="value" style={{ whiteSpace: 'pre-line' }}>{formatEventDateTime()}</span>
               </div>
               <div className="detail-item">
-                <span className="label">開始日:</span>
-                <span className="value">{formatDateTime(event.開始日)}</span>
+                <span className="label">場所:</span>
+                <span className="value">{event.開催場所名 || '情報なし'}</span>
               </div>
-              {event.終了日 && event.終了日 !== event.開始日 && (
+              {event.住所 && (
                 <div className="detail-item">
-                  <span className="label">終了日:</span>
-                  <span className="value">{formatDateTime(event.終了日)}</span>
+                  <span className="label">住所:</span>
+                  <span className="value">{event.住所}</span>
                 </div>
               )}
+              <div className="detail-item">
+                <span className="label">開催状況:</span>
+                <span className="value">{event.開催ステータス || '情報なし'}</span>
+              </div>
             </div>
 
             <div className="detail-section">
@@ -142,27 +217,41 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }) => {
                 </span>
               </div>
               <div className="detail-item">
+                <span className="label">飲食店出店:</span>
+                <span className="value">
+                  {event.飲食店出店の有無 === 'TRUE' ? '有り' : 
+                   event.飲食店出店の有無 === 'FALSE' ? '無し' : 
+                   event.飲食店出店の有無 || '情報なし'}
+                </span>
+              </div>
+              <div className="detail-item">
                 <span className="label">カテゴリ:</span>
                 <span className="value">{event.上位カテゴリ || '情報なし'}</span>
-              </div>
-              <div className="detail-item">
-                <span className="label">規模:</span>
-                <span className="value">{event.規模感 || '情報なし'}</span>
-              </div>
-              <div className="detail-item">
-                <span className="label">開催状況:</span>
-                <span className="value">{event.開催ステータス || '情報なし'}</span>
               </div>
             </div>
 
             {getDetailTags().length > 0 && (
               <div className="detail-section">
-                <h3>見どころ・特徴</h3>
+                <h3>詳細タグ</h3>
                 <div className="tags">
                   {getDetailTags().map((tag, index) => (
                     <span key={index} className="tag">{tag}</span>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {event.見どころ && (
+              <div className="detail-section">
+                <h3>見どころ</h3>
+                <div className="detail-text">{event.見どころ}</div>
+              </div>
+            )}
+
+            {event.アクセス方法 && (
+              <div className="detail-section">
+                <h3>アクセス方法</h3>
+                <div className="detail-text">{event.アクセス方法}</div>
               </div>
             )}
 

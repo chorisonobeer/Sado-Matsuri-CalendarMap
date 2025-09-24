@@ -276,3 +276,103 @@
     }
   }
 }
+
+
+// 複数イベント選択モーダル
+.event-list-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 1rem;
+}
+
+.event-list-modal {
+  background: white;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 100%;
+  max-height: 70vh;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+
+  .modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    .close-button {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #718096;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: #f7fafc;
+        color: #2d3748;
+      }
+    }
+  }
+
+  .event-list {
+    max-height: calc(70vh - 100px);
+    overflow-y: auto;
+
+    .event-list-item {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: #f7fafc;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .event-title {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.25rem;
+        font-size: 1rem;
+      }
+
+      .event-location {
+        color: #718096;
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+      }
+
+      .event-time {
+        color: #1a73e8;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+    }
+  }
+}

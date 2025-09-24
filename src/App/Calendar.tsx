@@ -12,6 +12,8 @@ const Calendar: React.FC<CalendarProps> = ({ data }) => {
   const [currentDate, setCurrentDate] = useState(new Date()); // 現在表示している月の基準日
   const [selectedDateEvents, setSelectedDateEvents] = useState<Pwamap.FestivalData[]>([]); // 選択した日付のイベント
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEventListModalOpen, setIsEventListModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Pwamap.FestivalData | null>(null);
 
   // 月の最初の日と最後の日を取得
   const firstDayOfMonth = useMemo(() => new Date(currentDate.getFullYear(), currentDate.getMonth(), 1), [currentDate]);
@@ -78,18 +80,33 @@ const Calendar: React.FC<CalendarProps> = ({ data }) => {
   // 日付クリックハンドラ
   const handleDateClick = useCallback((date: Date) => {
     const events = getEventsForDate(date);
-    if (events.length > 0) {
-      setSelectedDateEvents(events);
+    if (events.length === 1) {
+      setSelectedEvent(events[0]);
       setIsModalOpen(true);
+    } else if (events.length > 1) {
+      setSelectedDateEvents(events);
+      setIsEventListModalOpen(true);
     }
   }, [getEventsForDate]);
+
+  // イベント選択ハンドラ
+  const handleEventSelect = useCallback((event: Pwamap.FestivalData) => {
+    setSelectedEvent(event);
+    setIsEventListModalOpen(false);
+    setIsModalOpen(true);
+  }, []);
 
   // モーダルを閉じるハンドラ
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
+    setSelectedEvent(null);
+  }, []);
+
+  // イベントリストモーダルを閉じるハンドラ
+  const handleCloseEventListModal = useCallback(() => {
+    setIsEventListModalOpen(false);
     setSelectedDateEvents([]);
-    // onSelectShop(undefined); // 選択状態をクリア (削除)
-  }, []); // onSelectShopを依存配列から削除
+  }, []);
 
   // 月の移動
   const goToPreviousMonth = useCallback(() => {
@@ -135,12 +152,40 @@ const Calendar: React.FC<CalendarProps> = ({ data }) => {
         })}
       </div>
 
-      {isModalOpen && selectedDateEvents.length > 0 && (
+      {/* イベント詳細モーダル */}
+      {isModalOpen && selectedEvent && (
         <EventModal
-          event={selectedDateEvents[0]} // 最初のイベントをモーダルに表示（要件に合わせて調整）
+          event={selectedEvent}
           isOpen={isModalOpen}
           onClose={handleCloseModal}
         />
+      )}
+
+      {/* 複数イベント選択モーダル */}
+      {isEventListModalOpen && selectedDateEvents.length > 0 && (
+        <div className="event-list-modal-backdrop" onClick={handleCloseEventListModal}>
+          <div className="event-list-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{selectedDateEvents[0] && new Date(selectedDateEvents[0].開始日).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })}のイベント</h3>
+              <button className="close-button" onClick={handleCloseEventListModal}>×</button>
+            </div>
+            <div className="event-list">
+              {selectedDateEvents.map((event, index) => (
+                <div
+                  key={event.index || index}
+                  className="event-list-item"
+                  onClick={() => handleEventSelect(event)}
+                >
+                  <div className="event-title">{event.お祭り名}</div>
+                  <div className="event-location">{event.開催場所名}</div>
+                  <div className="event-time">
+                    {event.開始時刻 && event.終了時刻 ? `${event.開始時刻} - ${event.終了時刻}` : '時間未定'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
