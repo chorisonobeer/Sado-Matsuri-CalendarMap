@@ -112,16 +112,27 @@ const MapView: React.FC<MapViewProps> = ({ selectedEvent, onMarkerUpdate }) => {
         .setLngLat([lng, lat]) // Geoloniaは [lng, lat] の順序
         .addTo(mapInstanceRef.current);
 
-      // GoogleMap風のDropアニメーション効果を追加
+      // GoogleMap風のDropアニメーション効果を追加（座標計算を保護）
       const markerElement = marker.getElement();
-      markerElement.style.transform = 'translateY(-100px)';
-      markerElement.style.opacity = '0';
-      markerElement.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease-in';
       
-      // アニメーション開始
+      // ラッパー要素を作成してアニメーション分離
+      const animationWrapper = document.createElement('div');
+      animationWrapper.style.position = 'relative';
+      animationWrapper.style.transform = 'translateY(-100px)';
+      animationWrapper.style.opacity = '0';
+      animationWrapper.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease-in';
+      
+      // マーカー要素をラッパーで包む
+      const parent = markerElement.parentNode;
+      if (parent) {
+        parent.insertBefore(animationWrapper, markerElement);
+        animationWrapper.appendChild(markerElement);
+      }
+      
+      // アニメーション開始（ラッパー要素に対して実行）
       setTimeout(() => {
-        markerElement.style.transform = 'translateY(0)';
-        markerElement.style.opacity = '1';
+        animationWrapper.style.transform = 'translateY(0)';
+        animationWrapper.style.opacity = '1';
       }, 100);
 
       // マーカークリックイベント
