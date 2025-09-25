@@ -48,10 +48,10 @@ const Content = () => {
       <div className={`hero-section ${isVisible ? 'visible' : ''}`}>
         <div className="hero-gradient"></div>
         <div className="hero-content">
-          <h1 className="hero-title">NIIGATA CRAFT BEER MAP</h1>
-          <p className="hero-subtitle">新潟のクラフトビールを、もっと身近に、もっとクールに。</p>
+          <h1 className="hero-title">佐渡のお祭りカレンダーマップ</h1>
+          <p className="hero-subtitle">佐渡島の伝統的なお祭りを、もっと身近に、もっと楽しく。</p>
           <div className="hero-image-container">
-            <img src="/dummy-hero.jpg" alt="新潟クラフトビールイメージ" className="hero-image" />
+            <img src="/dummy-hero.jpg" alt="佐渡のお祭りイメージ" className="hero-image" />
           </div>
         </div>
       </div>
@@ -66,16 +66,16 @@ const Content = () => {
             このマップについて
           </h2>
           <p>
-            「NIIGATA CRAFT BEER MAP」は、新潟県内のクラフトビールが飲めるお店・買えるお店を一目で探せるデジタルマップです。<br />
-            新潟の豊かな自然と職人の情熱が生み出すクラフトビールの魅力を、もっと多くの人に知ってほしい。<br />
+            「佐渡のお祭りカレンダーマップ」は、佐渡島で開催される伝統的なお祭りやイベントの開催情報を一目で確認できるデジタルマップです。<br />
+            佐渡の豊かな文化と伝統が息づくお祭りの魅力を、もっと多くの人に知ってほしい。<br />
             そんな想いからこのマップは生まれました。
           </p>
           <p>
-            <strong>どこで飲める？どこで買える？</strong>——そんな疑問をすぐに解決！<br />
-            地元の方も、観光で訪れた方も、新潟のクラフトビールを気軽に楽しめるお店やショップを簡単に見つけられます。
+            <strong>いつ開催される？どこで行われる？</strong>——そんな疑問をすぐに解決！<br />
+            地元の方も、観光で訪れた方も、佐渡の伝統的なお祭りやイベントを簡単に見つけて楽しむことができます。
           </p>
           <p>
-            新潟のクラフトビール文化を、みんなで盛り上げましょう！
+            佐渡の文化と伝統を、みんなで盛り上げましょう！
           </p>
         </div>
 
@@ -133,9 +133,9 @@ const Content = () => {
         <div className="content-card message-card">
           <h2 className="section-title">運営メッセージ</h2>
           <p>
-            新潟のクラフトビールを愛するすべての人へ。<br />
-            このマップが、あなたの「新しい一杯」との出会いのきっかけになれば幸いです。<br />
-            みんなで新潟のクラフトビール文化を盛り上げていきましょう！
+            佐渡の文化と伝統を愛するすべての人へ。<br />
+            このマップが、あなたの「新しい体験」との出会いのきっかけになれば幸いです。<br />
+            みんなで佐渡の文化と伝統を盛り上げていきましょう！
           </p>
         </div>
 

@@ -17,6 +17,8 @@ import LazyMap from './App/LazyMap';
 import { MapPointBase } from './App/Map';
 import Calendar from './App/Calendar'; // 追加
 import SearchView from './App/SearchView'; // 新規追加
+import { useAutoUpdate } from './hooks/useAutoUpdate'; // PWA自動更新
+import { UpdateIndicator } from './components/UpdateIndicator'; // 更新インジケーター
 import config from "./config.json";
 import './App.scss';
 
@@ -26,6 +28,9 @@ const App: React.FC = React.memo(() => {
   const [selectedShop, setSelectedShop] = useState<Pwamap.FestivalData | undefined>(undefined);
   const [filteredShops, setFilteredShops] = useState<Pwamap.FestivalData[]>([]);
   const location = useLocation();
+
+  // PWA自動更新システム
+  const { isChecking, updateApplied } = useAutoUpdate();
 
   const sortShopList = useCallback((shopList: Pwamap.FestivalData[]) => {
     return new Promise<Pwamap.FestivalData[]>((resolve) => {
@@ -225,6 +230,8 @@ const App: React.FC = React.memo(() => {
         <div className="app-footer">
           <Tabbar />
         </div>
+        {/* PWA自動更新インジケーター */}
+        <UpdateIndicator isChecking={isChecking} updateApplied={updateApplied} />
       </div>
     </GeolocationProvider>
   );
