@@ -38,11 +38,12 @@
 
       .text
       {
-        font-size: clamp(7px, 2.2vw, 11px);
+        font-size: clamp(9px, 2.8vw, 14px);
         line-height: 1.2;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        font-weight: 500;
       }
     }
   }
@@ -59,7 +60,8 @@
         }
 
         .text {
-          font-size: 10px;
+          font-size: 12px;
+          font-weight: 500;
         }
       }
     }

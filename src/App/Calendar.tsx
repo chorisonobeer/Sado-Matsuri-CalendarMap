@@ -2,6 +2,29 @@ import React, { useState, useMemo, useCallback } from 'react';
 import './Calendar.scss';
 import EventModal from './EventModal'; // イベント詳細モーダルを再利用
 
+// カラーパレット定義
+const EVENT_COLORS = [
+  '#1a73e8', // 青
+  '#34a853', // 緑
+  '#ea4335', // 赤
+  '#fbbc04', // 黄
+  '#9c27b0', // 紫
+  '#ff6d01', // オレンジ
+  '#00acc1', // シアン
+  '#795548', // 茶
+  '#607d8b', // 青灰
+  '#e91e63'  // ピンク
+];
+
+// イベント名のハッシュ値から色を決定
+const getEventColor = (eventName: string): string => {
+  const hash = eventName.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  return EVENT_COLORS[Math.abs(hash) % EVENT_COLORS.length];
+};
+
 interface CalendarProps {
   data: Pwamap.FestivalData[];
 }
@@ -140,8 +163,14 @@ const Calendar: React.FC<CalendarProps> = ({ data }) => {
             >
               <span className="day-number">{day.getDate()}</span>
               <div className="day-events">
-                {dayEvents.slice(0, 2).map(event => ( // 最大2件表示
-                  <div key={event.index} className="event-title">{event['お祭り名']}</div>
+                {dayEvents.slice(0, 2).map((event, eventIndex) => ( // 最大2件表示
+                  <div 
+                    key={event.index || eventIndex} 
+                    className="event-title"
+                    style={{ backgroundColor: getEventColor(event['お祭り名'] || '') }}
+                  >
+                    {event['お祭り名']}
+                  </div>
                 ))}
                 {dayEvents.length > 2 && (
                   <div className="more-events">+ {dayEvents.length - 2}件</div>

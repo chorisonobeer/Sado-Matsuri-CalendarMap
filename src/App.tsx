@@ -19,6 +19,7 @@ import Calendar from './App/Calendar'; // 追加
 import SearchView from './App/SearchView'; // 新規追加
 import { useAutoUpdate } from './hooks/useAutoUpdate'; // PWA自動更新
 import { UpdateIndicator } from './components/UpdateIndicator'; // 更新インジケーター
+import InstallPrompt from './components/InstallPrompt'; // PWAインストール促進
 import config from "./config.json";
 import './App.scss';
 
@@ -173,15 +174,14 @@ const App: React.FC = React.memo(() => {
         selectedShop={selectedShop}
         onSelectShop={handleSelectShop}
         initialData={shopList}
-        style={{ 
-          display: location.pathname === '/' ? 'none' : 'block',
-          position: 'absolute',
+        style={{
+          position: 'fixed',
           top: 0,
           left: 0,
           width: '100%',
           height: 'calc(100% - 50px)',
-          zIndex: location.pathname === '/' ? -1 : 1, // zIndexを下げる
-          pointerEvents: location.pathname === '/' ? 'none' : 'auto'
+          zIndex: location.pathname === '/search' ? 1 : -1, // 検索ページでのみ地図を前面表示
+          pointerEvents: location.pathname === '/search' ? 'auto' : 'none'
         }}
       />
     );
@@ -232,6 +232,8 @@ const App: React.FC = React.memo(() => {
         </div>
         {/* PWA自動更新インジケーター */}
         <UpdateIndicator isChecking={isChecking} updateApplied={updateApplied} />
+        {/* PWAインストール促進 */}
+        <InstallPrompt />
       </div>
     </GeolocationProvider>
   );

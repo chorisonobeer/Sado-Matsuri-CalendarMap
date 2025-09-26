@@ -36,5 +36,30 @@
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#FFFFFF",
-  "background_color": "#ffffff"
+  "background_color": "#ffffff",
+  "screenshots": [
+    {
+      "src": "screenshots/mobile-home.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "佐渡のお祭りカレンダーマップのホーム画面 - 直近の祭りイベント一覧"
+    },
+    {
+      "src": "screenshots/mobile-map.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "佐渡のお祭りカレンダーマップの地図画面 - 島内の祭り会場をマップで確認"
+    },
+    {
+      "src": "screenshots/desktop-home.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "佐渡のお祭りカレンダーマップのデスクトップ版 - 詳細な祭り情報と地図を同時表示"
+    }
+  ],
+  "description": "佐渡島で開催される祭りやイベントの情報を簡単に検索・確認できるアプリです。開催日程、場所、詳細情報をマップと一緒に表示し、佐渡の豊かな文化と伝統を体験するお手伝いをします。",
+  "categories": ["travel", "lifestyle", "entertainment"]
 }

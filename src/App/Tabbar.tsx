@@ -21,7 +21,7 @@ const Tabbar: React.FC = () => {
             className={location.pathname === '/' ? 'active' : ''}
           >
             <FiHome className="icon" />
-            <span className="text">ダッシュボード</span>
+            <span className="text">ホーム</span>
           </Link>
         </li>
         

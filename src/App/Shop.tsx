@@ -112,7 +112,7 @@ const Shop: React.FC<Props> = (props) => {
 
   // 画像データの処理
   const getImages = () => {
-    const imageKeys = ['画像', '画像2', '画像3', '画像4', '画像5'];
+    const imageKeys = ['写真URL1', '写真URL2', '写真URL3', '写真URL4', '写真URL5'];
     return imageKeys
       .map(key => props.shop[key])
       .filter(img => img && img.trim() !== '')

@@ -4,7 +4,7 @@
  * 変更概要: Google MapsからGeolonia Mapsに移行 - 複数イベント対応地図表示コンポーネント（検索画面用）
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import './MapView.scss';
 
 interface MultiMapViewProps {
@@ -13,15 +13,32 @@ interface MultiMapViewProps {
   onEventSelect: (event: Pwamap.FestivalData) => void;
 }
 
-const MultiMapView: React.FC<MultiMapViewProps> = ({ 
+interface MultiMapViewRef {
+  moveToLocation: (location: [number, number]) => void;
+}
+
+const MultiMapView = forwardRef<MultiMapViewRef, MultiMapViewProps>(({ 
   events, 
   selectedEvent, 
   onEventSelect 
-}) => {
+}, ref) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null); // geolonia.Map
   const markersRef = useRef<Map<string, any>>(new Map()); // geolonia.Marker
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+
+  // 外部から呼び出し可能なメソッドを公開
+  useImperativeHandle(ref, () => ({
+    moveToLocation: (location: [number, number]) => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.flyTo({
+          center: location,
+          zoom: 15,
+          duration: 1000
+        });
+      }
+    }
+  }), []);
 
   // 地図の初期化
   const initializeMap = useCallback(() => {
@@ -283,6 +300,8 @@ const MultiMapView: React.FC<MultiMapViewProps> = ({
       )}
     </div>
   );
-};
+});
+
+MultiMapView.displayName = 'MultiMapView';
 
 export default MultiMapView;
