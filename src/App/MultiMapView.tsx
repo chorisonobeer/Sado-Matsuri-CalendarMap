@@ -4,7 +4,7 @@
  * 変更概要: Google MapsからGeolonia Mapsに移行 - 複数イベント対応地図表示コンポーネント（検索画面用）
  */
 
-import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import './MapView.scss';
 
 interface MultiMapViewProps {
