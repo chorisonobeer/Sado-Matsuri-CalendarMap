@@ -9,7 +9,7 @@ import { FiSearch, FiMap, FiList } from 'react-icons/fi';
 import MultiMapView from './MultiMapView';
 import EventCard from './EventCard';
 import EventModal from './EventModal';
-import LocationButton from '../components/LocationButton';
+
 import './SearchView.scss';
 
 interface SearchViewProps {
@@ -23,8 +23,6 @@ const SearchView: React.FC<SearchViewProps> = ({ events }) => {
   const [viewMode, setViewMode] = useState<'map' | 'list'>('list');
   const [selectedEvent, setSelectedEvent] = useState<Pwamap.FestivalData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const mapViewRef = useRef<{ moveToLocation: (location: [number, number]) => void } | null>(null);
-
   // デバッグ用ログ
   console.log('SearchView rendering with events:', events?.length || 0);
   console.log('SearchView state:', { searchQuery, selectedTags, viewMode });
@@ -117,12 +115,7 @@ const SearchView: React.FC<SearchViewProps> = ({ events }) => {
     setSelectedEvent(null);
   }, []);
 
-  // 現在地移動ハンドラー
-  const handleLocationFound = useCallback((location: [number, number]) => {
-    if (mapViewRef.current && mapViewRef.current.moveToLocation) {
-      mapViewRef.current.moveToLocation(location);
-    }
-  }, []);
+
 
   return (
     <div className="search-view">
@@ -192,12 +185,6 @@ const SearchView: React.FC<SearchViewProps> = ({ events }) => {
             リスト
           </button>
         </div>
-        {viewMode === 'map' && (
-          <LocationButton 
-            onLocationFound={handleLocationFound}
-            className="search-control"
-          />
-        )}
       </div>
 
       {/* メインコンテンツエリア */}
@@ -205,7 +192,6 @@ const SearchView: React.FC<SearchViewProps> = ({ events }) => {
         {viewMode === 'map' ? (
           <div className="map-container">
             <MultiMapView
-              ref={mapViewRef}
               events={filteredEvents}
               selectedEvent={selectedEvent}
               onEventSelect={handleEventSelect}

@@ -61,8 +61,17 @@ const MultiMapView = forwardRef<MultiMapViewRef, MultiMapViewProps>(({
         style: 'geolonia/basic',
         center: defaultCenter,
         zoom: defaultZoom,
-        attributionControl: true
+        attributionControl: false // 重複表示を防ぐため無効化
       });
+
+      // カスタムattributionを追加（1つのみ、小さく表示）
+      mapInstanceRef.current.addControl(
+        new window.geolonia.AttributionControl({
+          compact: true,
+          customAttribution: '© GSI Japan | © Geolonia | © OpenStreetMap'
+        }),
+        'bottom-right'
+      );
 
       // 地図読み込み完了イベント
       mapInstanceRef.current.on('load', () => {
@@ -279,6 +288,36 @@ const MultiMapView = forwardRef<MultiMapViewRef, MultiMapViewProps>(({
     });
   }, [selectedEvent, isMapLoaded]);
 
+  // 現在地取得ハンドラー
+  const handleLocationClick = useCallback(() => {
+    if (!navigator.geolocation) {
+      alert('お使いのブラウザでは位置情報がサポートされていません。');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.flyTo({
+            center: [longitude, latitude],
+            zoom: 14,
+            duration: 1000
+          });
+        }
+      },
+      (error) => {
+        console.error('位置情報の取得に失敗しました:', error);
+        alert('位置情報の取得に失敗しました。設定を確認してください。');
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000
+      }
+    );
+  }, []);
+
   return (
     <div className="multi-map-view">
       <div 
@@ -286,6 +325,15 @@ const MultiMapView = forwardRef<MultiMapViewRef, MultiMapViewProps>(({
         className="map-container"
         style={{ width: '100%', height: '100%', minHeight: '400px' }}
       />
+      {isMapLoaded && (
+        <button 
+          className="location-button"
+          onClick={handleLocationClick}
+          title="現在地に移動"
+        >
+          <div className="location-icon"></div>
+        </button>
+      )}
       {!isMapLoaded && (
         <div className="map-loading">
           <div className="loading-spinner">地図を読み込んでいます...</div>

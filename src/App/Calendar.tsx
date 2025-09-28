@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import EventModal from './EventModal';
+import CalendarEventBars from './CalendarEventBars';
 import './Calendar.scss';
-import EventModal from './EventModal'; // イベント詳細モーダルを再利用
 
 // カラーパレット定義
 const EVENT_COLORS = [
@@ -147,38 +148,56 @@ const Calendar: React.FC<CalendarProps> = ({ data }) => {
         <h2>{currentDate.getFullYear()}年 {currentDate.getMonth() + 1}月</h2>
         <button onClick={goToNextMonth}>&gt;</button>
       </div>
-      <div className="calendar-grid">
-        {[ '日', '月', '火', '水', '木', '金', '土' ].map(day => (
-          <div key={day} className="calendar-weekday">{day}</div>
-        ))}
-        {calendarDays.map((day, index) => {
-          const dayEvents = getEventsForDate(day);
-          const isToday = day.toDateString() === new Date().toDateString();
-          const isCurrentMonth = day.getMonth() === currentDate.getMonth();
-          return (
-            <div
-              key={index}
-              className={`calendar-day ${isToday ? 'today' : ''} ${isCurrentMonth ? '' : 'other-month'}`}
-              onClick={() => handleDateClick(day)}
-            >
-              <span className="day-number">{day.getDate()}</span>
-              <div className="day-events">
-                {dayEvents.slice(0, 2).map((event, eventIndex) => ( // 最大2件表示
-                  <div 
-                    key={event.index || eventIndex} 
-                    className="event-title"
-                    style={{ backgroundColor: getEventColor(event['お祭り名'] || '') }}
-                  >
-                    {event['お祭り名']}
-                  </div>
-                ))}
-                {dayEvents.length > 2 && (
-                  <div className="more-events">+ {dayEvents.length - 2}件</div>
-                )}
+      <div className="calendar-container">
+        <div className="calendar-grid">
+          {[ '日', '月', '火', '水', '木', '金', '土' ].map(day => (
+            <div key={day} className="calendar-weekday">{day}</div>
+          ))}
+          {calendarDays.map((day, index) => {
+            const dayEvents = getEventsForDate(day).filter(event => {
+              // 1日だけのイベントのみ表示（複数日イベントはバーで表示）
+              const startDate = new Date(event.開始日);
+              const endDate = new Date(event.終了日);
+              return startDate.toDateString() === endDate.toDateString();
+            });
+            const isToday = day.toDateString() === new Date().toDateString();
+            const isCurrentMonth = day.getMonth() === currentDate.getMonth();
+            return (
+              <div
+                key={index}
+                className={`calendar-day ${isToday ? 'today' : ''} ${isCurrentMonth ? '' : 'other-month'}`}
+                onClick={() => handleDateClick(day)}
+              >
+                <span className="day-number">{day.getDate()}</span>
+                <div className="day-events">
+                  {dayEvents.slice(0, 2).map((event, eventIndex) => ( // 最大2件表示
+                    <div 
+                      key={event.index || eventIndex} 
+                      className="event-title"
+                      style={{ backgroundColor: getEventColor(event['お祭り名'] || '') }}
+                    >
+                      {event['お祭り名']}
+                    </div>
+                  ))}
+                  {dayEvents.length > 2 && (
+                    <div className="more-events">+ {dayEvents.length - 2}件</div>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+        
+        {/* 複数日イベントのバー表示 */}
+        <CalendarEventBars
+          events={eventsInMonth}
+          calendarDays={calendarDays}
+          getEventColor={getEventColor}
+          onEventClick={(event) => {
+            setSelectedEvent(event);
+            setIsModalOpen(true);
+          }}
+        />
       </div>
 
       {/* イベント詳細モーダル */}

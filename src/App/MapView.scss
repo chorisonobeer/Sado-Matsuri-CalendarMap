@@ -77,3 +77,70 @@
     display: none !important;
   }
 }
+
+// 現在地ボタン（標準的な◯型デザイン）
+.multi-map-view {
+  position: relative;
+
+  .location-button {
+    position: absolute;
+    bottom: 120px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    background-color: #ffffff;
+    border: 1px solid #dadce0;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #f8f9fa;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    &:active {
+      background-color: #e8f0fe;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .location-icon {
+      width: 20px;
+      height: 20px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23666'%3E%3Cpath d='M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z'/%3E%3C/svg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+  }
+}
+
+
+// Geolonia地図のattribution表示を調整
+.geolonia-ctrl-attrib {
+  font-size: 10px !important;
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  padding: 2px 4px !important;
+  border-radius: 2px !important;
+  
+  &.geolonia-ctrl-attrib-compact {
+    min-height: auto !important;
+    line-height: 1.2 !important;
+  }
+  
+  a {
+    font-size: 10px !important;
+    text-decoration: none !important;
+    color: #666 !important;
+  }
+}
+
+// 重複したattribution要素を非表示
+.geolonia-ctrl-attrib:not(:first-of-type) {
+  display: none !important;
+}
