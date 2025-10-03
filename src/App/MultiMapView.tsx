@@ -61,17 +61,11 @@ const MultiMapView = forwardRef<MultiMapViewRef, MultiMapViewProps>(({
         style: 'geolonia/basic',
         center: defaultCenter,
         zoom: defaultZoom,
-        attributionControl: false // 重複表示を防ぐため無効化
+        attributionControl: true // 標準の著作権表示を使用
       });
 
-      // カスタムattributionを追加（1つのみ、小さく表示）
-      mapInstanceRef.current.addControl(
-        new window.geolonia.AttributionControl({
-          compact: true,
-          customAttribution: '© GSI Japan | © Geolonia | © OpenStreetMap'
-        }),
-        'bottom-right'
-      );
+      // 現在地ボタンは標準のGeoloniaコントロールを使用
+      // （Geoloniaには標準の現在地ボタンが含まれている場合があります）
 
       // 地図読み込み完了イベント
       mapInstanceRef.current.on('load', () => {

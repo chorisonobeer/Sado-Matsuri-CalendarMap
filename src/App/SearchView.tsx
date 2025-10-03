@@ -4,7 +4,7 @@
  * 変更概要: 新規追加 - 統合検索コンポーネント（地図/リスト切り替え、検索、フィルター機能）
  */
 
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { FiSearch, FiMap, FiList } from 'react-icons/fi';
 import MultiMapView from './MultiMapView';
 import EventCard from './EventCard';
